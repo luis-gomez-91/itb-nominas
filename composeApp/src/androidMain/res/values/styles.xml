@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <!-- Tema personalizado para tu aplicación -->
+    <style name="Theme.nominas" parent="Theme.AppCompat.DayNight">
+<!--    <style name="Theme.AOK" parent="Theme.Material3.DayNight">-->
+        <!-- Personaliza los colores y estilos aquí -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+        <item name="android:windowLightNavigationBar">?attr/isLightTheme</item>
+        <!-- Eliminar la ActionBar -->
+        <item name="android:windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+</resources>
