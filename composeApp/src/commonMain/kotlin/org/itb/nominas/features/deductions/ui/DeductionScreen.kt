@@ -21,8 +21,10 @@ import org.itb.nominas.core.components.ShimmerLoadingAnimation
 import org.itb.nominas.core.components.TextFormat
 import org.itb.nominas.features.deductions.data.DeductionResponse
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun DeductionScreen (
     navHostController: NavHostController

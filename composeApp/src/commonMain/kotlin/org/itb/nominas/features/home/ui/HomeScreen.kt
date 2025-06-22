@@ -22,12 +22,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
+import io.github.aakira.napier.Napier
 import org.itb.nominas.core.components.MainScaffold
 import org.itb.nominas.core.components.MyCard
 import org.itb.nominas.core.components.MyErrorAlert
 import org.itb.nominas.core.components.ShimmerLoadingAnimation
-import org.itb.nominas.core.navigation.Deductions
-import org.itb.nominas.core.navigation.PayRoll
+import org.itb.nominas.core.navigation.AttendanceRoute
+import org.itb.nominas.core.navigation.DeductionsRoute
+import org.itb.nominas.core.navigation.PayRollRoute
 import org.itb.nominas.features.home.data.ModuloResponse
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -78,8 +80,9 @@ fun Screen(
                         modulo = modulo,
                         onClick = { rutaSeleccionada ->
                             when (rutaSeleccionada) {
-                                PayRoll.route -> navHostController.navigate(PayRoll)
-                                Deductions.route -> navHostController.navigate(Deductions)
+                                PayRollRoute.route -> navHostController.navigate(PayRollRoute)
+                                DeductionsRoute.route -> navHostController.navigate(DeductionsRoute)
+                                AttendanceRoute.route -> navHostController.navigate(AttendanceRoute)
                                 else -> {}
                             }
                         }
@@ -95,6 +98,7 @@ fun Screen(
             mensaje = it.message,
             onDismiss = {
                 homeViewModel.clearError()
+                homeViewModel.mainViewModel.logout(navHostController)
             },
             showAlert = true
         )
@@ -123,8 +127,18 @@ fun ModuloItem (
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .height(64.dp)
-                    .aspectRatio(1/1f)
-                    .padding(8.dp)
+                    .aspectRatio(1f)
+                    .padding(8.dp),
+                onSuccess = {
+                    Napier.i("Imagen cargada correctamente: ${modulo.imagen}", tag = "AsyncImage")
+                },
+                onError = {
+                    Napier.e("Error al cargar imagen: ${modulo.imagen}", it.result.throwable, tag = "AsyncImage")
+                },
+                onLoading = {
+                    Napier.d("Cargando imagen: ${modulo.imagen}", tag = "AsyncImage")
+                }
+
             )
             Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                 Text(

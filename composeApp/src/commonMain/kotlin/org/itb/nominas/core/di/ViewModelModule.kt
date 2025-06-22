@@ -1,6 +1,7 @@
 package org.itb.nominas.core.di
 
 import org.itb.nominas.core.utils.MainViewModel
+import org.itb.nominas.features.attendance.ui.AttendanceViewModel
 import org.itb.nominas.features.deductions.ui.DeductionViewModel
 import org.itb.nominas.features.home.ui.HomeViewModel
 import org.itb.nominas.features.login.ui.LoginViewModel
@@ -14,4 +15,5 @@ val viewModelModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::PayRollViewModel)
     viewModelOf(::DeductionViewModel)
+    viewModelOf(::AttendanceViewModel)
 }

@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.itb.nominas.core.utils.BiometryViewModel
+import org.itb.nominas.features.attendance.ui.AttendanceScreen
 import org.itb.nominas.features.deductions.ui.DeductionScreen
 import org.itb.nominas.features.home.ui.HomeScreen
 import org.itb.nominas.features.login.ui.LoginScreen
@@ -16,10 +17,11 @@ fun NavigationWrapper(
 ) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Login) {
-        composable<Login> { LoginScreen(navController, biometryViewModel) }
-        composable<Home> { HomeScreen(navController) }
-        composable<PayRoll> { PayRollScreen(navController) }
-        composable<Deductions> { DeductionScreen(navController) }
+    NavHost(navController = navController, startDestination = LoginRoute) {
+        composable<LoginRoute> { LoginScreen(navController, biometryViewModel) }
+        composable<HomeRoute> { HomeScreen(navController) }
+        composable<PayRollRoute> { PayRollScreen(navController) }
+        composable<DeductionsRoute> { DeductionScreen(navController) }
+        composable<AttendanceRoute> { AttendanceScreen(navController) }
     }
 }

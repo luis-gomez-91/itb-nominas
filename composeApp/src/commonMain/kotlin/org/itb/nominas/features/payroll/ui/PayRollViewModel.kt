@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.service.PayRollService
-import org.itb.nominas.core.navigation.PayRoll
+import org.itb.nominas.core.navigation.PayRollRoute
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.features.payroll.data.PayRollYear
 
@@ -36,7 +36,7 @@ class PayRollViewModel(
             try {
                 _isLoading.value = true
 
-                val response = service.fetchPayRoll(PayRoll.route)
+                val response = service.fetchPayRoll(PayRollRoute.route)
                 response.data?.let {
                     _data.value = it
                 }

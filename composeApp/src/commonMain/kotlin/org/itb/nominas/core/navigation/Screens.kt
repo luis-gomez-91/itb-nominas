@@ -7,22 +7,27 @@ interface Screen {
 }
 
 @Serializable
-object Home : Screen {
+object HomeRoute : Screen {
     override val route = "Home"
 }
 
 @Serializable
-object Login
+object LoginRoute
 
 @Serializable
-object Profile
+object ProfileRoute
 
 @Serializable
-object PayRoll : Screen {
+object PayRollRoute : Screen {
     override val route = "rolconsulta"
 }
 
 @Serializable
-object Deductions : Screen {
+object DeductionsRoute : Screen {
     override val route = "descuentos"
+}
+
+@Serializable
+object AttendanceRoute : Screen {
+    override val route = "registroasistencia"
 }

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.service.DeductionService
-import org.itb.nominas.core.navigation.Deductions
+import org.itb.nominas.core.navigation.DeductionsRoute
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.features.deductions.data.DeductionResponse
 
@@ -36,7 +36,7 @@ class DeductionViewModel(
             try {
                 _isLoading.value = true
 
-                val response = service.fetchDeductions(Deductions.route)
+                val response = service.fetchDeductions(DeductionsRoute.route)
                 response.data?.let {
                     _data.value = it
                 }

@@ -1,4 +1,4 @@
-package org.itb.nominas.features.home.ui
+package org.itb.nominas.features.attendance.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.data.response.ErrorResponse
-import org.itb.nominas.core.data.service.HomeService
+import org.itb.nominas.core.data.service.AttendanceService
+import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.utils.MainViewModel
-import org.itb.nominas.features.home.data.HomeResponse
+import org.itb.nominas.features.attendance.data.AttendanceResponse
 
-
-class HomeViewModel(
+class AttendanceViewModel(
     val mainViewModel: MainViewModel,
-    val service: HomeService
+    val service: AttendanceService
 ): ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -23,26 +23,22 @@ class HomeViewModel(
     private val _error = MutableStateFlow<ErrorResponse?>(null)
     val error: StateFlow<ErrorResponse?> = _error
 
-    private val _data = MutableStateFlow<HomeResponse?>(null)
-    val data: StateFlow<HomeResponse?> = _data
+    private val _data = MutableStateFlow<AttendanceResponse?>(null)
+    val data: StateFlow<AttendanceResponse?> = _data
 
     fun clearError() {
         _error.value = null
     }
 
-    fun loadHome() {
+    fun loadAttendance() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
 
-                val response = service.fetchHome()
+                val response = service.fetchAttendance(AttendanceRoute.route)
                 _data.value = response.data
                 _error.value = response.error
 
-                _data.value?.let {
-                    mainViewModel.setTitle(it.colaborador.nombre)
-                    mainViewModel.setColaborador(it.colaborador)
-                }
                 Napier.i("$response", tag="home")
 
             } catch (e: Exception) {

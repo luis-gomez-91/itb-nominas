@@ -8,8 +8,8 @@ import dev.icerock.moko.biometry.BiometryAuthenticator
 import dev.icerock.moko.resources.desc.desc
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.launch
-import org.itb.nominas.core.navigation.Home
-import org.itb.nominas.core.navigation.Login
+import org.itb.nominas.core.navigation.HomeRoute
+import org.itb.nominas.core.navigation.LoginRoute
 import org.itb.nominas.core.network.provideHttpClient
 import org.itb.nominas.features.login.data.LoginRequest
 
@@ -50,8 +50,8 @@ class BiometryViewModel(
                             AppSettings.setToken(it)
                         }
 
-                        navHostController.navigate(Home) {
-                            popUpTo(Login) { inclusive = true }
+                        navHostController.navigate(HomeRoute) {
+                            popUpTo(LoginRoute) { inclusive = true }
                             launchSingleTop = true
                         }
 

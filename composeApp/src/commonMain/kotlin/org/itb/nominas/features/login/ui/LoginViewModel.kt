@@ -4,13 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.luisdev.marknotes.data.remote.service.LoginService
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.itb.nominas.features.login.data.LoginRequest
 import org.itb.nominas.core.data.response.ErrorResponse
-import org.itb.nominas.core.navigation.Home
-import org.itb.nominas.core.navigation.Login
+import org.itb.nominas.core.navigation.HomeRoute
+import org.itb.nominas.core.navigation.LoginRoute
 import org.itb.nominas.features.login.data.LoginResponse
 import org.itb.nominas.core.utils.AppSettings
 import org.itb.nominas.core.utils.MainViewModel
@@ -77,8 +78,8 @@ class LoginViewModel(
                 }
 
                 if (_data.value != null) {
-                    navHostController.navigate(Home) {
-                        popUpTo(Login) { inclusive = true }
+                    navHostController.navigate(HomeRoute) {
+                        popUpTo(LoginRoute) { inclusive = true }
                         launchSingleTop = true
                     }
                 }

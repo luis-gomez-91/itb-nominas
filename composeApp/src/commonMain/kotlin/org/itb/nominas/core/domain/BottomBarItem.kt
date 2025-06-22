@@ -9,5 +9,6 @@ data class BottomBarItem (
     val label: String,
     val icon: ImageVector,
     val color: Color,
-    val style: TextStyle
+    val style: TextStyle,
+    val isSelected: Boolean
 )

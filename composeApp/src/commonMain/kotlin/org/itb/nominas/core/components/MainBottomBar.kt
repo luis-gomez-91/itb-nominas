@@ -1,5 +1,8 @@
 package org.itb.nominas.core.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,8 +43,8 @@ import compose.icons.evaicons.fill.Person
 import compose.icons.evaicons.outline.Home
 import compose.icons.evaicons.outline.Person
 import org.itb.nominas.core.domain.BottomBarItem
-import org.itb.nominas.core.navigation.Home
-import org.itb.nominas.core.navigation.Profile
+import org.itb.nominas.core.navigation.HomeRoute
+import org.itb.nominas.core.navigation.ProfileRoute
 import org.itb.nominas.core.utils.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,24 +56,26 @@ fun MainBottomBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val bottomSheetProfile by mainViewModel.bottomSheetProfile.collectAsState(false)
-    val isHomeSelected = currentRoute == Home::class.qualifiedName
-    val isProfileSelected = currentRoute == Profile::class.qualifiedName
+    val isHomeSelected = currentRoute == HomeRoute::class.qualifiedName
+    val isProfileSelected = currentRoute == ProfileRoute::class.qualifiedName
     val colaborador by mainViewModel.colaborador.collectAsState(null)
 
     val navigationIcons = listOf<BottomBarItem>(
         BottomBarItem(
-            onclick = { navController.navigate(Home) },
+            onclick = { navController.navigate(HomeRoute) },
             label = "Inicio",
             icon = if (isHomeSelected) EvaIcons.Fill.Home else EvaIcons.Outline.Home,
             color = if (isHomeSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            style = if (isHomeSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall
+            style = if (isHomeSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall,
+            isSelected = isHomeSelected
         ),
         BottomBarItem(
             onclick = { mainViewModel.setBottomSheetProfile(true) },
             label = "Perfil",
             icon = if (isProfileSelected) EvaIcons.Fill.Person else EvaIcons.Outline.Person,
             color = if (isProfileSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            style = if (isProfileSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall
+            style = if (isProfileSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall,
+            isSelected = isProfileSelected
         )
     )
 
@@ -81,25 +88,41 @@ fun MainBottomBar(
             modifier = Modifier.fillMaxWidth()
         ) {
             navigationIcons.forEach {
+                val animatedIconSize by animateDpAsState(
+                    targetValue = if (it.isSelected) 28.dp else 24.dp,
+                    animationSpec = tween(durationMillis = 300)
+                )
+
+                val animatedColor by animateColorAsState(
+                    targetValue = it.color,
+                    animationSpec = tween(durationMillis = 300)
+                )
+
                 NavigationBarItem(
-                    selected = false,
-                    onClick = {
-                        it.onclick()
-                    },
+                    selected = it.isSelected,
+                    onClick = { it.onclick() },
                     icon = {
                         Icon(
                             imageVector = it.icon,
                             contentDescription = it.label,
-                            tint = it.color
+                            tint = animatedColor,
+                            modifier = Modifier.size(animatedIconSize)
                         )
                     },
                     label = {
                         Text(
                             text = it.label,
                             style = it.style,
-                            color = it.color
+                            color = animatedColor
                         )
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color.Transparent,
+                        selectedIconColor = animatedColor,
+                        unselectedIconColor = animatedColor,
+                        selectedTextColor = animatedColor,
+                        unselectedTextColor = animatedColor
+                    )
                 )
             }
         }

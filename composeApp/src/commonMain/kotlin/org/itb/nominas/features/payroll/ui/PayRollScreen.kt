@@ -38,9 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Download
+import kotlinx.serialization.json.JsonPrimitive
 import org.itb.nominas.core.components.MainScaffold
 import org.itb.nominas.core.components.MyCard
+import org.itb.nominas.core.components.MyErrorAlert
 import org.itb.nominas.core.components.ShimmerLoadingAnimation
+import org.itb.nominas.core.data.request.ReportRequest
 import org.itb.nominas.features.payroll.data.PayRollYear
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -70,6 +73,7 @@ fun Screen(
     val data: List<PayRollYear> by payRollViewModel.data.collectAsState(emptyList())
     var selectedTabIndex by remember { mutableStateOf(0) }
     val isLoading by payRollViewModel.isLoading.collectAsState(false)
+    val reportError by payRollViewModel.mainViewModel.reportError.collectAsState(null)
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -118,7 +122,7 @@ fun Screen(
                         .fillMaxSize()
                         .background(color = MaterialTheme.colorScheme.surface)
                 ) {
-                    PayRollItem(data.getOrNull(index))
+                    PayRollItem(data.getOrNull(index), payRollViewModel)
                 }
             }
         } else {
@@ -133,6 +137,17 @@ fun Screen(
                 )
             }
         }
+    }
+
+    reportError?.let {
+        MyErrorAlert(
+            titulo = "Error",
+            mensaje = it.message,
+            onDismiss = {
+                payRollViewModel.mainViewModel.clearReportError()
+            },
+            showAlert = true
+        )
     }
 }
 
@@ -180,7 +195,8 @@ fun ScrollableTabRowPayRoll(
 
 @Composable
 fun PayRollItem(
-    payRoll: PayRollYear?
+    payRoll: PayRollYear?,
+    payRollViewModel: PayRollViewModel
 ) {
     Spacer(Modifier.height(16.dp))
     payRoll?.let {
@@ -203,14 +219,26 @@ fun PayRollItem(
                         )
 
                         Spacer(Modifier.width(16.dp))
-                        IconButton (
-                            onClick = {}
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Download,
-                                contentDescription = "Descargar Rol",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+
+                        rol.reportName?.let {
+                            IconButton (
+                                onClick = {
+                                    val form = ReportRequest(
+                                        name = it,
+                                        params = mapOf(
+                                            "rol_id" to JsonPrimitive(rol.idRol),
+                                            "persona" to JsonPrimitive(rol.idPersona)
+                                        )
+                                    )
+                                    payRollViewModel.mainViewModel.downloadReport(form)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = TablerIcons.Download,
+                                    contentDescription = "Descargar Rol",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
 

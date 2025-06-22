@@ -8,9 +8,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.data.request.RefreshTokenRequest
+import org.itb.nominas.core.data.request.ReportRequest
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.service.MainService
-import org.itb.nominas.core.navigation.Login
+import org.itb.nominas.core.navigation.LoginRoute
 import org.itb.nominas.core.platform.URLOpener
 import org.itb.nominas.features.home.data.ColaboradorResponse
 
@@ -35,11 +36,17 @@ class MainViewModel(
     private val _error = MutableStateFlow<ErrorResponse?>(null)
     val error: StateFlow<ErrorResponse?> = _error
 
+    private val _reportError = MutableStateFlow<ErrorResponse?>(null)
+    val reportError: StateFlow<ErrorResponse?> = _reportError
+
     private val _bottomSheetTheme = MutableStateFlow<Boolean>(false)
     val bottomSheetTheme: StateFlow<Boolean> = _bottomSheetTheme
 
     private val _bottomSheetProfile = MutableStateFlow<Boolean>(false)
     val bottomSheetProfile: StateFlow<Boolean> = _bottomSheetProfile
+
+    private val _reportLoading = MutableStateFlow<Boolean>(false)
+    val reportLoading: StateFlow<Boolean> = _reportLoading
 
     fun setTheme(newValue: Theme) {
         _selectedTheme.value = newValue
@@ -62,6 +69,11 @@ class MainViewModel(
         _colaborador.value = newValue
     }
 
+    fun clearReportError() {
+        _reportError.value = null
+    }
+
+
     fun logout(navHostController: NavHostController) {
         viewModelScope.launch {
             try {
@@ -72,7 +84,7 @@ class MainViewModel(
                     Napier.i("${response}", tag = "LogoutFlow")
 
                     if (response.status == "success") {
-                        navHostController.navigate(Login) {
+                        navHostController.navigate(LoginRoute) {
                             popUpTo(navHostController.graph.id) {
                                 inclusive = true
                             }
@@ -88,6 +100,29 @@ class MainViewModel(
                     popUpTo(navHostController.graph.id) { inclusive = true }
                     launchSingleTop = true
                 }
+            }
+        }
+    }
+
+    fun downloadReport(form: ReportRequest) {
+        viewModelScope.launch {
+            _reportLoading.value = true
+            try {
+                val response = service.downloadReport(form)
+
+                _reportError.value = response.error
+                Napier.i("$response", tag = "report")
+
+                response.data?.let {
+                    urlOpener.openURL(it.message)
+                }
+
+            } catch (e: Exception) {
+                _error.value = ErrorResponse(code = "error_except", message = "${e.message}")
+                Napier.i("$_error.value", tag = "report")
+
+            } finally {
+                _reportLoading.value = false
             }
         }
     }

@@ -36,7 +36,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
-//            implementation(libs.ktor.io)
+            implementation(libs.ktor.utils.jvm)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -49,12 +49,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
             implementation(libs.coil.compose)
+//            implementation(libs.coil.core)
             implementation(libs.coil.network.ktor)
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.negotiation)
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.auth)
+
             implementation(libs.kotlin.serialization)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.datetime)
@@ -67,6 +69,8 @@ kotlin {
             implementation(libs.moko.mvvm)
             implementation(libs.moko.biometry)
             implementation(libs.moko.biometry.compose)
+            implementation(libs.moko.permissions.location)
+            implementation(libs.moko.permissions.compose)
             implementation(libs.russhwolf.settings.multiplatform)
             implementation(libs.napier.logger)
             implementation(libs.material.icons.extended)

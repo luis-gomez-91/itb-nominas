@@ -30,8 +30,10 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,12 +50,30 @@ import compose.icons.evaicons.fill.Sun
 import compose.icons.evaicons.outline.ChevronRight
 import compose.icons.evaicons.outline.LogOut
 import compose.icons.evaicons.outline.Person
+import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+import dev.icerock.moko.permissions.location.COARSE_LOCATION
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.domain.MainDrawerItem
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.core.utils.Theme
 import org.itb.nominas.core.utils.getTheme
 
+@Composable
+fun PermissionRequestEffect(
+    permission: Permission,
+    onResult: (Boolean) -> Unit
+) {
+    val factory = rememberPermissionsControllerFactory()
+    val controller = remember(factory) { factory.createPermissionsController() }
+    BindEffect(controller)
+
+    LaunchedEffect(controller) {
+        controller.providePermission(permission)
+        onResult(controller.isPermissionGranted(permission))
+    }
+}
 
 @Composable
 fun MyDrawerContent(
@@ -70,6 +90,10 @@ fun MyDrawerContent(
         add(MainDrawerItem("Perfil", EvaIcons.Outline.Person) { mainViewModel.setBottomSheetProfile(true) })
         add(MainDrawerItem("Tema", selectedTheme?.getTheme()?.icon ?: EvaIcons.Fill.Sun) { mainViewModel.setBottomSheetTheme(true) })
         add(MainDrawerItem("Cerrar sesión", EvaIcons.Outline.LogOut) { mainViewModel.logout(navHostController) })
+    }
+
+    PermissionRequestEffect(Permission.COARSE_LOCATION) {
+
     }
 
     ModalDrawerSheet(
