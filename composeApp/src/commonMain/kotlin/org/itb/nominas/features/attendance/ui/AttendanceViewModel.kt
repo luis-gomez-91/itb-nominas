@@ -6,6 +6,11 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.service.AttendanceService
 import org.itb.nominas.core.navigation.AttendanceRoute
@@ -47,5 +52,55 @@ class AttendanceViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun getCurrentFormattedTime(): String {
+        val now = Clock.System.now()
+        val zone = TimeZone.currentSystemDefault()
+        val datetime = now.toLocalDateTime(zone)
+
+        val hour = datetime.hour.toString().padStart(2, '0')
+        val minute = datetime.minute.toString().padStart(2, '0')
+        val second = datetime.second.toString().padStart(2, '0')
+
+        return "$hour:$minute:$second"
+    }
+
+    fun getCurrentFormattedDate(): String {
+        val now = Clock.System.now()
+        val zone = TimeZone.currentSystemDefault()
+        val datetime = now.toLocalDateTime(zone)
+
+        val dayOfWeek = when (datetime.dayOfWeek) {
+            DayOfWeek.MONDAY -> "Lunes"
+            DayOfWeek.TUESDAY -> "Martes"
+            DayOfWeek.WEDNESDAY -> "Miércoles"
+            DayOfWeek.THURSDAY -> "Jueves"
+            DayOfWeek.FRIDAY -> "Viernes"
+            DayOfWeek.SATURDAY -> "Sábado"
+            DayOfWeek.SUNDAY -> "Domingo"
+            else -> ""
+        }
+
+        val month = when (datetime.month) {
+            Month.JANUARY -> "Enero"
+            Month.FEBRUARY -> "Febrero"
+            Month.MARCH -> "Marzo"
+            Month.APRIL -> "Abril"
+            Month.MAY -> "Mayo"
+            Month.JUNE -> "Junio"
+            Month.JULY -> "Julio"
+            Month.AUGUST -> "Agosto"
+            Month.SEPTEMBER -> "Septiembre"
+            Month.OCTOBER -> "Octubre"
+            Month.NOVEMBER -> "Noviembre"
+            Month.DECEMBER -> "Diciembre"
+            else -> ""
+        }
+
+        val dayOfMonth = datetime.dayOfMonth.toString()
+        val year = datetime.year.toString()
+
+        return "$dayOfWeek, $dayOfMonth de $month de $year"
     }
 }

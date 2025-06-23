@@ -31,7 +31,7 @@ fun MyCard(
         border = borderColor?.let { BorderStroke(2.dp, it) }
     ) {
         Box (
-            modifier = modifier
+            modifier = Modifier
                 .padding(8.dp)
         ) {
             content()
