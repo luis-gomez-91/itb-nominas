@@ -1,66 +1,58 @@
 package org.itb.nominas.core.platform
 
-import org.itb.nominas.core.domain.LocationItem
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.itb.nominas.core.domain.LocationItem
 import platform.CoreLocation.*
-import platform.Foundation.NSError
+import platform.Foundation.NSLocale
+import platform.Foundation.countryCode
+import platform.Foundation.currentLocale
 import platform.darwin.NSObject
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
-class IosLocationService : NSObject(), LocationService {
+class IOSLocationService : LocationService {
 
-    private val locationManager = CLLocationManager()
-    private var locationContinuation: (suspend () -> Unit)? = null
-
-    private var currentContinuation: ((LocationItem?) -> Unit)? = null
-
-    init {
-        locationManager.delegate = this
-    }
-
-    actual override suspend fun fetchLocation(): LocationItem? {
+    override suspend fun fetchLocation(): LocationItem? {
         return suspendCancellableCoroutine { continuation ->
-            currentContinuation = { locationItem ->
-                continuation.resume(locationItem)
+
+            val manager = CLLocationManager()
+            val delegate = LocationDelegate { item ->
+                continuation.resume(item)
             }
 
-            // Pedir autorización si no está dada
-            locationManager.requestWhenInUseAuthorization()
-
-            // Iniciar actualización de ubicación
-            locationManager.startUpdatingLocation()
+            manager.delegate = delegate
+            manager.desiredAccuracy = kCLLocationAccuracyBest
+            manager.requestWhenInUseAuthorization()
+            manager.startUpdatingLocation()
         }
     }
 
-    override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
-        locationManager.stopUpdatingLocation()
+    private class LocationDelegate(
+        val onLocation: (LocationItem?) -> Unit
+    ) : NSObject(), CLLocationManagerDelegateProtocol {
 
-        val location = didUpdateLocations.firstOrNull() as? CLLocation
-        if (location != null) {
-            val latitude = location.coordinate.latitude
-            val longitude = location.coordinate.longitude
+        @OptIn(ExperimentalForeignApi::class)
+        override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
+            val location = didUpdateLocations.lastOrNull() as? CLLocation ?: return
+            val countryCode = NSLocale.currentLocale.countryCode ?: "US"
 
-            val geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(location) { placemarks, error ->
-                val countryCode = placemarks?.firstOrNull()?.ISOcountryCode ?: "US"
-                val locationItem = LocationItem(
-                    latitude = latitude,
-                    longitude = longitude,
-                    countryCode = countryCode
+            location.coordinate.useContents {
+                onLocation(
+                    LocationItem(
+                        latitude = latitude,
+                        longitude = longitude,
+                        countryCode = countryCode
+                    )
                 )
-                currentContinuation?.invoke(locationItem)
-                currentContinuation = null
             }
-        } else {
-            currentContinuation?.invoke(null)
-            currentContinuation = null
-        }
-    }
 
-    override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {
-        locationManager.stopUpdatingLocation()
-        currentContinuation?.invoke(null)
-        currentContinuation = null
+            manager.stopUpdatingLocation()
+        }
+
+        override fun locationManager(manager: CLLocationManager, didFailWithError: platform.Foundation.NSError) {
+            onLocation(null)
+            manager.stopUpdatingLocation()
+        }
     }
 }
