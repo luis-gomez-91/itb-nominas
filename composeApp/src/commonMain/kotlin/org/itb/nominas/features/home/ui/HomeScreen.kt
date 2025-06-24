@@ -129,15 +129,15 @@ fun ModuloItem (
                     .height(64.dp)
                     .aspectRatio(1f)
                     .padding(8.dp),
-                onSuccess = {
-                    Napier.i("Imagen cargada correctamente: ${modulo.imagen}", tag = "AsyncImage")
-                },
-                onError = {
-                    Napier.e("Error al cargar imagen: ${modulo.imagen}", it.result.throwable, tag = "AsyncImage")
-                },
-                onLoading = {
-                    Napier.d("Cargando imagen: ${modulo.imagen}", tag = "AsyncImage")
-                }
+//                onSuccess = {
+//                    Napier.i("Imagen cargada correctamente: ${modulo.imagen}", tag = "AsyncImage")
+//                },
+//                onError = {
+//                    Napier.e("Error al cargar imagen: ${modulo.imagen}", it.result.throwable, tag = "AsyncImage")
+//                },
+//                onLoading = {
+//                    Napier.d("Cargando imagen: ${modulo.imagen}", tag = "AsyncImage")
+//                }
 
             )
             Column(modifier = Modifier.padding(horizontal = 8.dp)) {

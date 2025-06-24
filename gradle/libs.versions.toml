@@ -22,9 +22,12 @@ ktor = "2.3.11"
 navigation-compose = "2.9.0-beta01"
 peekaboo = "0.5.2"
 composeMaterial3 = "1.2.1"
+
 mokoMVVM = "0.16.1"
 mokoBiometry = "0.4.0"
 mokoPermissions = "0.19.1"
+mokoGeo = "0.8.0"
+
 kotlinxDatetime = "0.6.2"
 filekitCore = "0.8.7"
 calfFilePickerCoil = "0.5.1"
@@ -35,8 +38,11 @@ composeIcons = "1.1.1"
 materialIconsExtended = "1.7.3"
 koin = "3.6.0-Beta4"
 koinCompose = "1.2.0-Beta4"
+playServicesLocation = "21.3.0"
 
 [libraries]
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -66,11 +72,15 @@ kotlin-serialization = {module = "io.ktor:ktor-serialization-kotlinx-json", vers
 androidx-navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
 peekaboo-ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo" }
 peekaboo-image-picker = { module = "io.github.onseok:peekaboo-image-picker", version.ref = "peekaboo" }
+
 moko-mvvm = { module = "dev.icerock.moko:mvvm-core", version.ref = "mokoMVVM" }
 moko-biometry = { module = "dev.icerock.moko:biometry", version.ref = "mokoBiometry" }
 moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.ref = "mokoBiometry" }
 moko-permissions-location = { module = "dev.icerock.moko:permissions-location", version.ref = "mokoPermissions" }
 moko-permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "mokoPermissions" }
+moko-geo = { module = "dev.icerock.moko:geo", version.ref = "mokoGeo" }
+moko-geo-compose = { module = "dev.icerock.moko:geo-compose", version.ref = "mokoGeo" }
+
 calf-file-picker = { module = "com.mohamedrejeb.calf:calf-file-picker", version.ref = "calfFilePicker" }
 calf-file-picker-coil = { module = "com.mohamedrejeb.calf:calf-file-picker-coil", version.ref = "calfFilePickerCoil" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }

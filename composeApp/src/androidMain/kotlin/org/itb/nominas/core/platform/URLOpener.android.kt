@@ -15,7 +15,7 @@ class URLOpenerAndroid(private val context: Context) : URLOpener {
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e("prueba", "ERRORRR: ${e.message}")
+            Log.e("urlOpener", "Error: ${e.message}")
             Toast.makeText(context, "Error al intentar abrir la URL: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }

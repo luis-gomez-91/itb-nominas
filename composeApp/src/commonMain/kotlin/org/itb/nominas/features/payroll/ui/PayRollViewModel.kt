@@ -44,7 +44,7 @@ class PayRollViewModel(
 
             } catch (e: Exception) {
                 _error.value = ErrorResponse(code = "error", message = "${e.message}")
-                Napier.e("Login error: ${e.message}", tag = "prueba")
+                Napier.e("PayRoll error: ${e.message}", tag = "PayRollViewModel")
             } finally {
                 _isLoading.value = false
             }

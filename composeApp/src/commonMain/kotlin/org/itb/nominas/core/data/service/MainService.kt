@@ -45,8 +45,8 @@ class MainService (
                 setBody(body)
             }
             val bodyAsText = response.bodyAsText()
-            Napier.e("Respuesta cruda: $bodyAsText" , tag = "prueba")
-            Napier.e("Código de estado: ${response.status}" , tag = "prueba")
+            Napier.e("Respuesta cruda: $bodyAsText" , tag = "report")
+            Napier.e("Código de estado: ${response.status}" , tag = "report")
             response.body<BaseResponse<MessageResponse>>()
 
         } catch (e: Exception) {

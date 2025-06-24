@@ -25,6 +25,9 @@ class AttendanceViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _showBottomSheetNewEntry = MutableStateFlow(false)
+    val showBottomSheetNewEntry: StateFlow<Boolean> = _showBottomSheetNewEntry
+
     private val _error = MutableStateFlow<ErrorResponse?>(null)
     val error: StateFlow<ErrorResponse?> = _error
 
@@ -33,6 +36,10 @@ class AttendanceViewModel(
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun setShowBottomSheetNewEntry(newValue: Boolean) {
+        _showBottomSheetNewEntry.value = newValue
     }
 
     fun loadAttendance() {
@@ -102,5 +109,9 @@ class AttendanceViewModel(
         val year = datetime.year.toString()
 
         return "$dayOfWeek, $dayOfMonth de $month de $year"
+    }
+
+    fun ingresarRegistro() {
+
     }
 }

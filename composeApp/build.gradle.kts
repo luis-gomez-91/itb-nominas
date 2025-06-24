@@ -14,7 +14,7 @@ kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     
@@ -37,6 +37,8 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.koin.android)
             implementation(libs.ktor.utils.jvm)
+            implementation(libs.play.services.location)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -66,11 +68,15 @@ kotlin {
             implementation(libs.peekaboo.image.picker)
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
+
             implementation(libs.moko.mvvm)
             implementation(libs.moko.biometry)
             implementation(libs.moko.biometry.compose)
             implementation(libs.moko.permissions.location)
             implementation(libs.moko.permissions.compose)
+            implementation(libs.moko.geo)
+            implementation(libs.moko.geo.compose)
+
             implementation(libs.russhwolf.settings.multiplatform)
             implementation(libs.napier.logger)
             implementation(libs.material.icons.extended)
@@ -81,7 +87,6 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-//            implementation(libs.koin.test)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -115,8 +120,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

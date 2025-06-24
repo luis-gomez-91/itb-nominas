@@ -50,30 +50,11 @@ import compose.icons.evaicons.fill.Sun
 import compose.icons.evaicons.outline.ChevronRight
 import compose.icons.evaicons.outline.LogOut
 import compose.icons.evaicons.outline.Person
-import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.compose.BindEffect
-import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
-import dev.icerock.moko.permissions.location.COARSE_LOCATION
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.domain.MainDrawerItem
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.core.utils.Theme
 import org.itb.nominas.core.utils.getTheme
-
-@Composable
-fun PermissionRequestEffect(
-    permission: Permission,
-    onResult: (Boolean) -> Unit
-) {
-    val factory = rememberPermissionsControllerFactory()
-    val controller = remember(factory) { factory.createPermissionsController() }
-    BindEffect(controller)
-
-    LaunchedEffect(controller) {
-        controller.providePermission(permission)
-        onResult(controller.isPermissionGranted(permission))
-    }
-}
 
 @Composable
 fun MyDrawerContent(
@@ -90,10 +71,6 @@ fun MyDrawerContent(
         add(MainDrawerItem("Perfil", EvaIcons.Outline.Person) { mainViewModel.setBottomSheetProfile(true) })
         add(MainDrawerItem("Tema", selectedTheme?.getTheme()?.icon ?: EvaIcons.Fill.Sun) { mainViewModel.setBottomSheetTheme(true) })
         add(MainDrawerItem("Cerrar sesión", EvaIcons.Outline.LogOut) { mainViewModel.logout(navHostController) })
-    }
-
-    PermissionRequestEffect(Permission.COARSE_LOCATION) {
-
     }
 
     ModalDrawerSheet(

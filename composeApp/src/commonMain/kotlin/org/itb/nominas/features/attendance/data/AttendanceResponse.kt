@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class AttendanceResponse(
     val debeMarcarSalida: Boolean,
     val marcacionActual: String?,
-    val registros: List<AttendanceRegistroResponse>?
+    val registros: List<AttendanceRegistroResponse>?,
+    val ultimoRegistro: AttendanceUltimoRegistroResponse?
 )
