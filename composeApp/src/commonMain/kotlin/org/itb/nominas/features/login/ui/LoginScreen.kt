@@ -104,6 +104,7 @@ fun LoginScreen (
                 modifier = Modifier
                     .fillMaxWidth()
                     .safeContentPadding()
+                    .padding(start = 32.dp, end = 32.dp, bottom = 64.dp)
                     .weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {

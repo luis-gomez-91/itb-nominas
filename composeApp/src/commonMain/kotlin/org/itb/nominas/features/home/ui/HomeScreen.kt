@@ -22,7 +22,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
-import io.github.aakira.napier.Napier
 import org.itb.nominas.core.components.MainScaffold
 import org.itb.nominas.core.components.MyCard
 import org.itb.nominas.core.components.MyErrorAlert
@@ -30,6 +29,8 @@ import org.itb.nominas.core.components.ShimmerLoadingAnimation
 import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.navigation.DeductionsRoute
 import org.itb.nominas.core.navigation.PayRollRoute
+import org.itb.nominas.core.navigation.TrackerRoute
+import org.itb.nominas.core.utils.AppSettings
 import org.itb.nominas.features.home.data.ModuloResponse
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -37,13 +38,12 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun HomeScreen(
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    homeViewModel: HomeViewModel = koinViewModel()
 ) {
-    val homeViewModel: HomeViewModel = koinViewModel()
 
-    LaunchedEffect(Unit) {
-        homeViewModel.loadHome()
-    }
+//    val tokenKey = AppSettings.getToken()?.access ?: "no-token"
+//    val homeViewModel: HomeViewModel = koinViewModel(key = "home-$tokenKey")
 
     MainScaffold(
         navController = navHostController,
@@ -52,6 +52,7 @@ fun HomeScreen(
     )
 }
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun Screen(
     homeViewModel: HomeViewModel,
@@ -60,6 +61,10 @@ fun Screen(
     val data by homeViewModel.data.collectAsState(null)
     val error by homeViewModel.error.collectAsState(null)
     val isLoading by homeViewModel.isLoading.collectAsState(false)
+
+    LaunchedEffect(AppSettings.getToken()) {
+        homeViewModel.loadHome()
+    }
 
     if (isLoading) {
         Column (
@@ -83,6 +88,7 @@ fun Screen(
                                 PayRollRoute.route -> navHostController.navigate(PayRollRoute)
                                 DeductionsRoute.route -> navHostController.navigate(DeductionsRoute)
                                 AttendanceRoute.route -> navHostController.navigate(AttendanceRoute)
+                                TrackerRoute.route -> navHostController.navigate(TrackerRoute)
                                 else -> {}
                             }
                         }
@@ -94,10 +100,11 @@ fun Screen(
 
     error?.let {
         MyErrorAlert(
-            titulo = "Error",
-            mensaje = it.message,
+            titulo = "Sesión expirada",
+            mensaje = "Tu sesión ha caducado por motivos de seguridad. Por favor, inicia sesión nuevamente para continuar.",
             onDismiss = {
                 homeViewModel.clearError()
+                homeViewModel.clearData()
                 homeViewModel.mainViewModel.logout(navHostController)
             },
             showAlert = true

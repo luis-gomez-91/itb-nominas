@@ -1,25 +1,33 @@
+// org.itb.nominas.core.utils.AppSettings.kt
 package org.itb.nominas.core.utils
 
 import org.itb.nominas.core.platform.getSettings
 import org.itb.nominas.features.login.data.TokenResponse
 
+
 object AppSettings {
-    private val settings by lazy { getSettings() }
+    private val settings by lazy {
+        getSettings()
+    }
 
     fun setUsername(user: String) {
-        settings.putString(USERNAME, user)
+        settings.putString(KEY_USERNAME, user)
     }
 
     fun getUsername(): String? {
-        return settings.getStringOrNull(USERNAME)
+        val username = settings.getStringOrNull(KEY_USERNAME)
+        return username
     }
 
     fun setPassword(pass: String) {
-        settings.putString(PASSWORD, pass)
+        // ¡ADVERTENCIA! Almacenar contraseñas en SharedPreferences no es seguro.
+        // Considera usar un almacenamiento seguro (KeyStore/Keychain) si es una contraseña real.
+        settings.putString(KEY_PASSWORD, pass)
     }
 
     fun getPassword(): String? {
-        return settings.getStringOrNull(PASSWORD)
+        val password = settings.getStringOrNull(KEY_PASSWORD)
+        return password
     }
 
     fun setTheme(theme: Theme) {
@@ -28,7 +36,8 @@ object AppSettings {
 
     fun getTheme(): Theme {
         val value = settings.getString(KEY_THEME, defaultValue = Theme.SystemDefault.name)
-        return Theme.entries.firstOrNull { it.name == value } ?: Theme.SystemDefault
+        val theme = Theme.entries.firstOrNull { it.name == value } ?: Theme.SystemDefault
+        return theme
     }
 
     fun setToken(token: TokenResponse) {
@@ -45,10 +54,10 @@ object AppSettings {
         val access = settings.getStringOrNull(KEY_ACCESS_TOKEN)
         val refresh = settings.getStringOrNull(KEY_REFRESH_TOKEN)
 
-        return if (!access.isNullOrBlank() && !refresh.isNullOrBlank()) {
-            TokenResponse(access = access, refresh = refresh)
+        if (access != null && refresh != null) {
+            return TokenResponse(access = access, refresh = refresh)
         } else {
-            null
+            return null
         }
     }
 }

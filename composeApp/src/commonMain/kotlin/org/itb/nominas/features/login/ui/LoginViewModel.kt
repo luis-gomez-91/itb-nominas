@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.luisdev.marknotes.data.remote.service.LoginService
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -12,6 +11,7 @@ import org.itb.nominas.features.login.data.LoginRequest
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.navigation.HomeRoute
 import org.itb.nominas.core.navigation.LoginRoute
+import org.itb.nominas.core.network.SessionManager
 import org.itb.nominas.features.login.data.LoginResponse
 import org.itb.nominas.core.utils.AppSettings
 import org.itb.nominas.core.utils.MainViewModel
@@ -19,13 +19,14 @@ import org.itb.nominas.core.utils.MainViewModel
 
 class LoginViewModel(
     val mainViewModel: MainViewModel,
-    private val service: LoginService
+    private val service: LoginService,
+    private val sessionManager: SessionManager
 ): ViewModel() {
 
-    private val _username = MutableStateFlow("lagomez5")
+    private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username
 
-    private val _password = MutableStateFlow("Mariajose1994$")
+    private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password
 
     fun onLoginChanged(user: String, pass: String) {
@@ -75,6 +76,7 @@ class LoginViewModel(
                     AppSettings.setToken(it)
                     AppSettings.setUsername(_username.value)
                     AppSettings.setPassword(_password.value)
+                    sessionManager.onLoginSuccess()
                 }
 
                 if (_data.value != null) {

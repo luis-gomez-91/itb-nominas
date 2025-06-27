@@ -12,8 +12,11 @@ import org.itb.nominas.core.data.request.RefreshTokenRequest
 import org.itb.nominas.core.data.request.ReportRequest
 import org.itb.nominas.core.data.response.BaseResponse
 import org.itb.nominas.core.data.response.ErrorResponse
+import org.itb.nominas.core.data.response.LastVersionReponse
 import org.itb.nominas.core.data.response.MessageResponse
+import org.itb.nominas.core.data.response.UrlResponse
 import org.itb.nominas.core.utils.URL_SERVER
+
 
 class MainService (
     private val client: HttpClient
@@ -38,22 +41,27 @@ class MainService (
 
     suspend fun downloadReport(
         body: ReportRequest
-    ): BaseResponse<MessageResponse> {
+    ): BaseResponse<UrlResponse> {
         return try {
             val response = client.post("${URL_SERVER}run_report/") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
             }
-            val bodyAsText = response.bodyAsText()
-            Napier.e("Respuesta cruda: $bodyAsText" , tag = "report")
-            Napier.e("Código de estado: ${response.status}" , tag = "report")
-            response.body<BaseResponse<MessageResponse>>()
-
+            response.body<BaseResponse<UrlResponse>>()
         } catch (e: Exception) {
             BaseResponse(
                 status = "error",
                 error = ErrorResponse(code = "error", message = "$e")
             )
         }
+    }
+
+    suspend fun fetchLastVersion(): LastVersionReponse {
+        val response = client.post("${URL_SERVER}last_version/") {
+            contentType(ContentType.Application.Json)
+        }
+        val raw = response.bodyAsText()
+        Napier.i("Respuesta cruda del servidor: $raw", tag = "lastVersion")
+        return response.body<LastVersionReponse>()
     }
 }

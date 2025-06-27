@@ -15,7 +15,9 @@ import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.service.AttendanceService
 import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.utils.MainViewModel
-import org.itb.nominas.features.attendance.data.AttendanceResponse
+import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
+import org.itb.nominas.features.attendance.data.response.AttendanceResponse
+import org.itb.nominas.features.attendance.data.response.AttendanceSalidaResponse
 
 class AttendanceViewModel(
     val mainViewModel: MainViewModel,
@@ -36,6 +38,10 @@ class AttendanceViewModel(
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun setError(newValue: String) {
+        _error.value = ErrorResponse(code = "error", message = newValue)
     }
 
     fun setShowBottomSheetNewEntry(newValue: Boolean) {
@@ -111,7 +117,69 @@ class AttendanceViewModel(
         return "$dayOfWeek, $dayOfMonth de $month de $year"
     }
 
-    fun ingresarRegistro() {
+    private val _clientAddress = MutableStateFlow<String?>(null)
+    val clientAddress: StateFlow<String?> = _clientAddress
 
+    private val _selectedMotivoSalida = MutableStateFlow<AttendanceSalidaResponse?>(null)
+    val selectedMotivoSalida: StateFlow<AttendanceSalidaResponse?> = _selectedMotivoSalida
+
+    fun setSelectedMotivoSalida(newValue: AttendanceSalidaResponse?) {
+        _selectedMotivoSalida.value = newValue
+    }
+
+    fun buildEntryRequest(
+        comment: String,
+        isSalida: Boolean = false,
+        hasPermission: Boolean,
+    ): AttendanceEntryRequest? {
+        val idMotivoSalida = _selectedMotivoSalida.value?.id
+
+        if (!hasPermission) {
+            setError("Faltan permisos de Ubicación")
+            return null
+        }
+
+        if (isSalida && idMotivoSalida == null) {
+            setError("Ingrese motivo")
+            return null
+        }
+
+        mainViewModel.fetchLocation()
+        mainViewModel.location.value?.let {
+            return AttendanceEntryRequest(
+                comment = comment,
+                clientAddress = mainViewModel.getLocalIp(),
+                latitude = it.latitude,
+                longitude = it.longitude,
+                idMotivoSalida = idMotivoSalida
+            )
+        }
+
+        setError("Agregue permisos de Ubicación")
+        return null
+    }
+
+    fun sendEntryRequest(request: AttendanceEntryRequest) {
+        viewModelScope.launch {
+            try {
+                Napier.i("BODY: $request", tag = "Attendance")
+                _isLoading.value = true
+                val response = service.newEntry(request)
+
+                if (response.status == "success") {
+                    loadAttendance()
+                    setShowBottomSheetNewEntry(false)
+                } else {
+                    _error.value = response.error ?: ErrorResponse("error", "Error desconocido del servidor")
+                }
+
+                Napier.i("Respuesta entrada: $response", tag = "Attendance")
+            } catch (e: Exception) {
+                _error.value = ErrorResponse(code = "error", message = "${e.message}")
+            } finally {
+                _isLoading.value = false
+                setSelectedMotivoSalida(null)
+            }
+        }
     }
 }

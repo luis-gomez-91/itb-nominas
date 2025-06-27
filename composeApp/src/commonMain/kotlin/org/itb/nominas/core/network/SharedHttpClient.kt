@@ -24,9 +24,7 @@ fun provideHttpClient(): HttpClient = HttpClient {
     install(Auth) {
         bearer {
             loadTokens {
-                AppSettings.getToken()?.let {
-                    BearerTokens(it.access, it.refresh)
-                }
+                AppSettings.getToken()?.let { BearerTokens(it.access, it.refresh) }
             }
             refreshTokens {
                 val current = AppSettings.getToken()
@@ -61,9 +59,9 @@ fun provideHttpClient(): HttpClient = HttpClient {
     }
 
     install(HttpTimeout) {
-        requestTimeoutMillis = 100_000
-        connectTimeoutMillis = 100_000
-        socketTimeoutMillis = 100_000
+        requestTimeoutMillis = 30_000     // 30 segundos
+        connectTimeoutMillis = 15_000     // 15 segundos
+        socketTimeoutMillis = 15_000      // 15 segundos
     }
 
     install(ResponseObserver) {
@@ -74,4 +72,12 @@ fun provideHttpClient(): HttpClient = HttpClient {
             }
         }
     }
+
+//    install(Logging) {
+//        logger = object : Logger {
+//            override fun log(message: String) {
+//                Napier.d(message, tag = "KtorLogging")
+//            }
+//        }
+//    }
 }

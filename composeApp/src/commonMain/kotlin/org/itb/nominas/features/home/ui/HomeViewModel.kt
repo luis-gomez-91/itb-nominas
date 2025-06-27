@@ -30,6 +30,10 @@ class HomeViewModel(
         _error.value = null
     }
 
+    fun clearData() {
+        _data.value = null
+    }
+
     fun loadHome() {
         viewModelScope.launch {
             try {

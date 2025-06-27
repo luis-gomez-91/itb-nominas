@@ -31,3 +31,8 @@ object DeductionsRoute : Screen {
 object AttendanceRoute : Screen {
     override val route = "registroasistencia"
 }
+
+@Serializable
+object TrackerRoute : Screen {
+    override val route = "bitacora-asistencia"
+}

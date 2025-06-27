@@ -7,5 +7,10 @@
 
 	<key>NSLocationWhenInUseUsageDescription</key>
     <string>Necesitamos tu ubicación para mostrar contenido local</string>
+
+    <key>NSCameraUsageDescription</key>
+    <string>$(PRODUCT_NAME) camera description.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>$(PRODUCT_NAME) photos description.</string>
 </dict>
 </plist>

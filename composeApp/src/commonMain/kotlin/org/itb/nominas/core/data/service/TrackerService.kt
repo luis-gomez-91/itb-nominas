@@ -1,5 +1,6 @@
 package org.itb.nominas.core.data.service
 
+import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -11,19 +12,28 @@ import org.itb.nominas.core.data.response.BaseResponse
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.response.MessageResponse
 import org.itb.nominas.core.utils.URL_SERVER
-import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
-import org.itb.nominas.features.attendance.data.response.AttendanceResponse
+import org.itb.nominas.features.tracker.data.TrackerRequest
+import org.itb.nominas.features.tracker.data.TrackerResponse
 
 
-class AttendanceService(
+class TrackerService(
     private val client: HttpClient
 ) {
-    suspend fun fetchAttendance(endPoint: String): BaseResponse<AttendanceResponse> {
+    suspend fun fetchTracker(
+        endPoint: String,
+        page: Int,
+        searchQuery: String? = null
+    ): BaseResponse<TrackerResponse> {
         return try {
-            val response = client.get("${URL_SERVER}$endPoint/today/") {
+            val response = client.get("${URL_SERVER}$endPoint/$page") {
                 contentType(ContentType.Application.Json)
+                url {
+                    searchQuery?.takeIf { it.isNotBlank() }?.let {
+                        parameters.append("search", it)
+                    }
+                }
             }
-            response.body<BaseResponse<AttendanceResponse>>()
+            response.body<BaseResponse<TrackerResponse>>()
 
         } catch (e: Exception) {
             BaseResponse(
@@ -33,15 +43,18 @@ class AttendanceService(
         }
     }
 
-    suspend fun newEntry(body: AttendanceEntryRequest): BaseResponse<MessageResponse> {
+    suspend fun newTracker(endPoint: String, body: TrackerRequest): BaseResponse<MessageResponse> {
         return try {
-            val response = client.post("${URL_SERVER}registroasistencia/check-in/") {
+            val response = client.post("${URL_SERVER}$endPoint/create/") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
             }
-            response.body<BaseResponse<MessageResponse>>()
+            val parsedResponse = response.body<BaseResponse<MessageResponse>>()
+            Napier.i("RERSPONSE: $parsedResponse", tag = "Bitacora")
+            return parsedResponse
 
         } catch (e: Exception) {
+            Napier.e("ERROR: $e", tag = "Bitacora")
             BaseResponse(
                 status = "error",
                 error = ErrorResponse(code = "exception", message = "$e")

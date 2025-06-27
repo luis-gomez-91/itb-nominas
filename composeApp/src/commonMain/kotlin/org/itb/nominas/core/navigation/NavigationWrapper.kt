@@ -10,6 +10,7 @@ import org.itb.nominas.features.deductions.ui.DeductionScreen
 import org.itb.nominas.features.home.ui.HomeScreen
 import org.itb.nominas.features.login.ui.LoginScreen
 import org.itb.nominas.features.payroll.ui.PayRollScreen
+import org.itb.nominas.features.tracker.ui.TrackerScreen
 
 @Composable
 fun NavigationWrapper(
@@ -23,5 +24,6 @@ fun NavigationWrapper(
         composable<PayRollRoute> { PayRollScreen(navController) }
         composable<DeductionsRoute> { DeductionScreen(navController) }
         composable<AttendanceRoute> { AttendanceScreen(navController) }
+        composable<TrackerRoute> { TrackerScreen(navController) }
     }
 }

@@ -37,6 +37,7 @@ class PayRollViewModel(
                 _isLoading.value = true
 
                 val response = service.fetchPayRoll(PayRollRoute.route)
+                Napier.e("PayRoll: $response", tag = "PayRollViewModel")
                 response.data?.let {
                     _data.value = it
                 }

@@ -65,13 +65,11 @@ fun MainTopBar(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .height(68.dp)
             ) {
                 Crossfade(targetState = onSearch) { isSearch ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(),
-//                            .padding(8.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         if (!isSearch) {
@@ -100,7 +98,7 @@ fun MainTopBar(
                                 ),
                                 keyboardActions = KeyboardActions(
                                     onSearch = {
-
+                                        mainViewModel.setSearchQuery(searchQuery)
                                     }
                                 )
                             )
@@ -125,6 +123,7 @@ fun MainTopBar(
                 IconButton(
                     onClick = {
                         onSearch = !onSearch
+                        mainViewModel.setSearchQuery(null)
                     }
                 ) {
                     Icon(

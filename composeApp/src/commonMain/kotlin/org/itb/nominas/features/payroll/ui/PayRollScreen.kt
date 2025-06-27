@@ -2,6 +2,7 @@ package org.itb.nominas.features.payroll.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import androidx.navigation.NavHostController
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Download
 import kotlinx.serialization.json.JsonPrimitive
+import org.itb.nominas.core.components.FullScreenLoading
 import org.itb.nominas.core.components.MainScaffold
 import org.itb.nominas.core.components.MyCard
 import org.itb.nominas.core.components.MyErrorAlert
@@ -73,6 +75,7 @@ fun Screen(
     val data: List<PayRollYear> by payRollViewModel.data.collectAsState(emptyList())
     var selectedTabIndex by remember { mutableStateOf(0) }
     val isLoading by payRollViewModel.isLoading.collectAsState(false)
+    val reportLoading by payRollViewModel.mainViewModel.reportLoading.collectAsState(false)
     val reportError by payRollViewModel.mainViewModel.reportError.collectAsState(null)
 
     val pagerState = rememberPagerState(
@@ -104,37 +107,40 @@ fun Screen(
             ShimmerLoadingAnimation(12)
         }
     } else {
-        if (data.isNotEmpty()) {
-            ScrollableTabRowPayRoll(
-                data = data,
-                selectedTabIndex = selectedTabIndex,
-                onTabSelected = { index ->
-                    selectedTabIndex = index
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (data.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    ScrollableTabRowPayRoll(
+                        data = data,
+                        selectedTabIndex = selectedTabIndex,
+                        onTabSelected = { selectedTabIndex = it }
+                    )
+
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) { index ->
+                        PayRollItem(data.getOrNull(index), payRollViewModel)
+                    }
                 }
-            )
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) { index ->
+            } else {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(color = MaterialTheme.colorScheme.surface)
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    PayRollItem(data.getOrNull(index), payRollViewModel)
+                    Text(
+                        text = "No hay datos disponibles",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "No hay datos disponibles",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+
+            if (reportLoading) {
+                FullScreenLoading(isLoading = true)
             }
         }
     }
@@ -226,7 +232,7 @@ fun PayRollItem(
                                     val form = ReportRequest(
                                         name = it,
                                         params = mapOf(
-                                            "rol_id" to JsonPrimitive(rol.idRol),
+                                            "rol_id" to JsonPrimitive(rol.id),
                                             "persona" to JsonPrimitive(rol.idPersona)
                                         )
                                     )
@@ -264,11 +270,11 @@ fun PayRollItem(
 
                     MyCard {
                         Column {
-                                Text(
-                                    text = "Débitos",
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    style = MaterialTheme.typography.titleSmall
-                                )
+                            Text(
+                                text = "Débitos",
+                                color = MaterialTheme.colorScheme.secondary,
+                                style = MaterialTheme.typography.titleSmall
+                            )
 
                             Spacer(Modifier.height(4.dp))
 

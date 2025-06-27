@@ -30,10 +30,8 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +53,11 @@ import org.itb.nominas.core.domain.MainDrawerItem
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.core.utils.Theme
 import org.itb.nominas.core.utils.getTheme
+import org.itb.nominas.features.home.ui.HomeViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun MyDrawerContent(
     drawerState: DrawerState,
@@ -66,11 +68,15 @@ fun MyDrawerContent(
     val colaborador = mainViewModel.colaborador.collectAsState(null)
     val selectedTheme by mainViewModel.selectedTheme.collectAsState(null)
     val showBottomSheetTheme by mainViewModel.bottomSheetTheme.collectAsState(false)
+    val homeViewModel: HomeViewModel = koinViewModel()
 
     val items = buildList {
         add(MainDrawerItem("Perfil", EvaIcons.Outline.Person) { mainViewModel.setBottomSheetProfile(true) })
         add(MainDrawerItem("Tema", selectedTheme?.getTheme()?.icon ?: EvaIcons.Fill.Sun) { mainViewModel.setBottomSheetTheme(true) })
-        add(MainDrawerItem("Cerrar sesión", EvaIcons.Outline.LogOut) { mainViewModel.logout(navHostController) })
+        add(MainDrawerItem("Cerrar sesión", EvaIcons.Outline.LogOut) {
+            homeViewModel.clearData()
+            mainViewModel.logout(navHostController)
+        })
     }
 
     ModalDrawerSheet(
@@ -97,10 +103,11 @@ fun MyDrawerContent(
                 Spacer(Modifier.height(16.dp))
 
                 colaborador.value?.let {
+                    val finalPhoto = it.foto ?: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTz02QJMGkQbLyOApa3_ZDRqr_QiGJh120ZQ&s"
 
                     AsyncImage(
-                        model = it.foto,
-                        contentDescription = "Foto",
+                        model = finalPhoto,
+                        contentDescription = "Avatar",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth(0.5f)

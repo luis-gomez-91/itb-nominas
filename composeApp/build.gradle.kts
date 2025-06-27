@@ -76,8 +76,6 @@ kotlin {
             implementation(libs.moko.biometry.compose)
             implementation(libs.moko.permissions.location)
             implementation(libs.moko.permissions.compose)
-            implementation(libs.moko.geo)
-            implementation(libs.moko.geo.compose)
 
             implementation(libs.russhwolf.settings.multiplatform)
             implementation(libs.napier.logger)
@@ -89,6 +87,8 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(libs.qr.kit)
+            implementation(libs.lokal.ip)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -107,8 +107,8 @@ android {
         applicationId = "org.itb.nominas"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 5
+        versionName = "0.1.5"
     }
     packaging {
         resources {

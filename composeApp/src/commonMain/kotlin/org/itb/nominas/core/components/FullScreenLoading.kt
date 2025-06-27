@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 
 @Composable
@@ -19,11 +20,12 @@ fun FullScreenLoading(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-                .zIndex(1f),
+                .background(Color.Black.copy(alpha = 0.6f))
+                .zIndex(2f)
+                .pointerInput(Unit) {},
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.tertiary)
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
     }
 }
