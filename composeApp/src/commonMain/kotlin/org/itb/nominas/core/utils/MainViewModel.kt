@@ -15,9 +15,14 @@ import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.response.LastVersionReponse
 import org.itb.nominas.core.data.service.MainService
 import org.itb.nominas.core.domain.LocationItem
+import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.navigation.LoginRoute
 import org.itb.nominas.core.platform.LocationService
 import org.itb.nominas.core.platform.URLOpener
+import org.itb.nominas.core.platform.isLocationEnabled
+import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
+import org.itb.nominas.features.attendance.data.response.AttendanceSalidaResponse
+import org.itb.nominas.features.attendance.data.response.AttendanceUltimoRegistroResponse
 import org.itb.nominas.features.home.data.ColaboradorResponse
 
 
@@ -87,6 +92,10 @@ class MainViewModel(
         _colaborador.value = newValue
     }
 
+    fun setUltimoRegistro(newValue: AttendanceUltimoRegistroResponse) {
+        _colaborador.value?.let { it.ultimoRegistro = newValue }
+    }
+
     fun clearReportError() {
         _reportError.value = null
     }
@@ -139,17 +148,18 @@ class MainViewModel(
     }
 
 //    LOCATION
-//    val prueba = LocationItem(
-//        latitude = 0.0,
-//        longitude = 0.0,
-//        countryCode = "EC"
-//    )
-    private val _location = MutableStateFlow<LocationItem?>(null)
+    val prueba = LocationItem(
+        latitude = 0.0,
+        longitude = 0.0,
+        countryCode = "EC"
+    )
+    private val _location = MutableStateFlow<LocationItem?>(prueba)
     val location: StateFlow<LocationItem?> = _location
 
     fun fetchLocation() {
         viewModelScope.launch {
             val result = locationService.fetchLocation()
+            Napier.i("LOCATION: $result", tag = "NewEntry")
             _location.value = result
         }
     }
@@ -175,6 +185,91 @@ class MainViewModel(
         val lokalIp = LokalIpFactory().create()
         val localIpAddress = lokalIp.getLocalIpAddress()
         return localIpAddress
+    }
+
+
+    fun setError(newValue: String) {
+        _error.value = ErrorResponse(code = "error", message = newValue)
+    }
+
+    fun clearError() { _error.value = null }
+
+    private val _selectedMotivoSalida = MutableStateFlow<AttendanceSalidaResponse?>(null)
+    val selectedMotivoSalida: StateFlow<AttendanceSalidaResponse?> = _selectedMotivoSalida
+
+    private val _showBottomSheetNewEntry = MutableStateFlow(false)
+    val showBottomSheetNewEntry: StateFlow<Boolean> = _showBottomSheetNewEntry
+
+    fun setShowBottomSheetNewEntry(newValue: Boolean) {
+        _showBottomSheetNewEntry.value = newValue
+    }
+
+    fun setSelectedMotivoSalida(newValue: AttendanceSalidaResponse?) {
+        _selectedMotivoSalida.value = newValue
+    }
+
+    fun buildEntryRequest(
+        comment: String,
+        isSalida: Boolean = false,
+        hasPermission: Boolean,
+    ): AttendanceEntryRequest? {
+        val idMotivoSalida = _selectedMotivoSalida.value?.id
+
+        if (!hasPermission) {
+            setError("Faltan permisos de Ubicación")
+            return null
+        }
+
+        if (!isLocationEnabled()) {
+            setError("Para continuar, habilita la ubicación del dispositivo.")
+            return null
+        }
+
+        if (isSalida && idMotivoSalida == null) {
+            setError("Ingrese motivo")
+            return null
+        }
+
+        fetchLocation()
+        _location.value?.let {
+            return AttendanceEntryRequest(
+                comment = comment,
+                clientAddress = getLocalIp(),
+                latitude = it.latitude,
+                longitude = it.longitude,
+                idMotivoSalida = idMotivoSalida
+            )
+        }
+
+        setError("Ocurrió un error inesperado, reinicie la app e intente nuevamente.")
+        return null
+    }
+
+    private val _attendanceLoading = MutableStateFlow(false)
+    val attendanceLoading: StateFlow<Boolean> = _attendanceLoading
+
+    fun sendEntryRequest(
+        request: AttendanceEntryRequest,
+        navHostController: NavHostController
+    ) {
+        viewModelScope.launch {
+            _attendanceLoading.value = true
+            try {
+                val response = service.newEntry(request)
+                if (response.status == "success") {
+                    setShowBottomSheetNewEntry(false)
+                    navHostController.navigate(AttendanceRoute)
+                } else {
+                    _error.value = response.error ?: ErrorResponse("error", "Error desconocido del servidor")
+                }
+                Napier.i("Respuesta entrada: $response", tag = "Attendance")
+            } catch (e: Exception) {
+                _error.value = ErrorResponse(code = "error", message = "${e.message}")
+            } finally {
+                _attendanceLoading.value = false
+                setSelectedMotivoSalida(null)
+            }
+        }
     }
 
 }

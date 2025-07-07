@@ -19,8 +19,8 @@ import org.itb.nominas.core.utils.MainViewModel
 
 class LoginViewModel(
     val mainViewModel: MainViewModel,
-    private val service: LoginService,
-    private val sessionManager: SessionManager
+    val service: LoginService,
+    val sessionManager: SessionManager
 ): ViewModel() {
 
     private val _username = MutableStateFlow("")

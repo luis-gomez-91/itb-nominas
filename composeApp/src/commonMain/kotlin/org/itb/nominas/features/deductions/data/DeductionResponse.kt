@@ -1,13 +1,11 @@
 package org.itb.nominas.features.deductions.data
 
 import kotlinx.serialization.Serializable
+import org.itb.nominas.core.data.response.PagingResponse
+
 
 @Serializable
 data class DeductionResponse(
-    val cancelado: Boolean,
-    val fecha: String,
-    val motivo: String,
-    val numCuota: String,
-    val tipo: String,
-    val valor: Double
+    val paging: PagingResponse,
+    val descuentos: List<DeductionItemResponse>
 )

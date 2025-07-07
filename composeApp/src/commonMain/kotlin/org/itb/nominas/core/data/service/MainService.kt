@@ -15,7 +15,9 @@ import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.response.LastVersionReponse
 import org.itb.nominas.core.data.response.MessageResponse
 import org.itb.nominas.core.data.response.UrlResponse
+import org.itb.nominas.core.network.provideUnauthenticatedHttpClient
 import org.itb.nominas.core.utils.URL_SERVER
+import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
 
 
 class MainService (
@@ -57,11 +59,28 @@ class MainService (
     }
 
     suspend fun fetchLastVersion(): LastVersionReponse {
-        val response = client.post("${URL_SERVER}last_version/") {
+        val unauthClient = provideUnauthenticatedHttpClient()
+        val response = unauthClient.post("${URL_SERVER}last_version/") {
             contentType(ContentType.Application.Json)
         }
         val raw = response.bodyAsText()
         Napier.i("Respuesta cruda del servidor: $raw", tag = "lastVersion")
         return response.body<LastVersionReponse>()
+    }
+
+    suspend fun newEntry(body: AttendanceEntryRequest): BaseResponse<MessageResponse> {
+        return try {
+            val response = client.post("${URL_SERVER}registroasistencia/check-in/") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+            response.body<BaseResponse<MessageResponse>>()
+
+        } catch (e: Exception) {
+            BaseResponse(
+                status = "error",
+                error = ErrorResponse(code = "exception", message = "$e")
+            )
+        }
     }
 }

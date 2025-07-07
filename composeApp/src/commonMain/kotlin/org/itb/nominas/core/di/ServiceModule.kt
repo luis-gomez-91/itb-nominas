@@ -3,6 +3,7 @@ package org.itb.nominas.core.di
 import com.luisdev.marknotes.data.remote.service.LoginService
 import org.itb.nominas.core.data.service.AttendanceService
 import org.itb.nominas.core.data.service.DeductionService
+import org.itb.nominas.core.data.service.HistoryService
 import org.itb.nominas.core.data.service.HomeService
 import org.itb.nominas.core.data.service.MainService
 import org.itb.nominas.core.data.service.PayRollService
@@ -17,4 +18,5 @@ val serviceModule = module {
     single { DeductionService(get()) }
     single { AttendanceService(get()) }
     single { TrackerService(get()) }
+    single { HistoryService(get()) }
 }

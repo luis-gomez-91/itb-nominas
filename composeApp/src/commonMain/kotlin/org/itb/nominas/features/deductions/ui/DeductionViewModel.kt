@@ -24,11 +24,18 @@ class DeductionViewModel(
     private val _error = MutableStateFlow<ErrorResponse?>(null)
     val error: StateFlow<ErrorResponse?> = _error
 
-    private val _data = MutableStateFlow<List<DeductionResponse>>(emptyList())
-    val data: StateFlow<List<DeductionResponse>> = _data
+    private val _data = MutableStateFlow<DeductionResponse?>(null)
+    val data: StateFlow<DeductionResponse?> = _data
+
+    private val _actualPage = MutableStateFlow(1)
+    val actualPage: StateFlow<Int> = _actualPage
 
     fun clearError() {
         _error.value = null
+    }
+
+    fun setActualPage(newValue:Int) {
+        _actualPage.value = newValue
     }
 
     fun loadDeductions() {
@@ -36,9 +43,10 @@ class DeductionViewModel(
             try {
                 _isLoading.value = true
 
-                val response = service.fetchDeductions(DeductionsRoute.route)
+                val response = service.fetchDeductions(DeductionsRoute.route, _actualPage.value)
                 response.data?.let {
                     _data.value = it
+                    mainViewModel.setTitle("Descuentos Institucionales")
                 }
                 _error.value = response.error
 

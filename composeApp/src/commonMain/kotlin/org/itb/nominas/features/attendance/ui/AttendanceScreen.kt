@@ -24,31 +24,38 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import compose.icons.EvaIcons
+import compose.icons.TablerIcons
 import compose.icons.evaicons.Outline
 import compose.icons.evaicons.outline.Clock
 import compose.icons.evaicons.outline.LogIn
 import compose.icons.evaicons.outline.LogOut
+import compose.icons.tablericons.World
+import dev.icerock.moko.permissions.DeniedAlwaysException
+import dev.icerock.moko.permissions.DeniedException
 import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.PermissionsController
 import dev.icerock.moko.permissions.location.COARSE_LOCATION
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
 import org.itb.nominas.core.components.FullScreenLoading
 import org.itb.nominas.core.components.MainScaffold
+import org.itb.nominas.core.components.MyAssistChip
 import org.itb.nominas.core.components.MyCard
 import org.itb.nominas.core.components.MyErrorAlert
 import org.itb.nominas.core.components.MyExposedDropdownMenuBox
 import org.itb.nominas.core.components.MyFilledTonalButton
 import org.itb.nominas.core.components.MyOutlinedTextFieldArea
-import org.itb.nominas.core.components.PermissionRequestEffect
+import org.itb.nominas.core.components.ShimmerLoadingAnimation
 import org.itb.nominas.core.components.TextFormat
 import org.itb.nominas.core.domain.LocationItem
+import org.itb.nominas.core.platform.isLocationEnabled
+import org.itb.nominas.core.utils.MainViewModel
+import org.itb.nominas.core.utils.URL_SERVER_ONLY
+import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
 import org.itb.nominas.features.attendance.data.response.AttendanceResponse
-import org.itb.nominas.features.attendance.data.response.AttendanceSalidaResponse
-import org.itb.nominas.features.attendance.data.response.AttendanceUltimoRegistroResponse
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -74,13 +81,19 @@ fun Screen(
     val data by attendanceViewModel.data.collectAsState(null)
     val isLoading by attendanceViewModel.isLoading.collectAsState(false)
     val error by attendanceViewModel.error.collectAsState(null)
-    val showBottomSheetNewEntry by attendanceViewModel.showBottomSheetNewEntry.collectAsState((false))
+    val mainError by attendanceViewModel.mainViewModel.error.collectAsState(null)
 
     LaunchedEffect(data, error) {
         attendanceViewModel.loadAttendance()
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    if (isLoading) {
+        Column (
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            ShimmerLoadingAnimation(rowNumber = 3, height = 80.dp)
+        }
+    } else {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,12 +125,7 @@ fun Screen(
                 }
             }
         }
-
-        if (isLoading) {
-            FullScreenLoading(isLoading = true)
-        }
     }
-
 
     error?.let {
         MyErrorAlert(
@@ -130,78 +138,127 @@ fun Screen(
         )
     }
 
-    if (showBottomSheetNewEntry) {
-        val location by attendanceViewModel.mainViewModel.location.collectAsState()
-        data?.let {
-            NewEntry(
-                ultimoRegistro = it.ultimoRegistro,
-                salidas = it.motivosSalida,
-                permissionsController = attendanceViewModel.mainViewModel.permissionsController,
-                location = location,
-                onDismiss = { attendanceViewModel.setShowBottomSheetNewEntry(false) },
-                onTracker = { attendanceViewModel.mainViewModel.fetchLocation() },
-                attendanceViewModel = attendanceViewModel
-            )
-        }
+    mainError?.let {
+        MyErrorAlert(
+            titulo = "Error",
+            mensaje = it.message,
+            onDismiss = {
+                attendanceViewModel.mainViewModel.clearError()
+            },
+            showAlert = true
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun NewEntry(
-    ultimoRegistro: AttendanceUltimoRegistroResponse?,
-    salidas: List<AttendanceSalidaResponse>,
-    permissionsController: PermissionsController,
     location: LocationItem?,
-    onDismiss: () -> Unit,
-    onTracker: () -> Unit,
-    attendanceViewModel: AttendanceViewModel
+    mainViewModel: MainViewModel,
+    isSalida: Boolean,
+    navHostController: NavHostController
 ) {
     var hasPermission by remember { mutableStateOf(false) }
+    var isLocationEnabled by remember { mutableStateOf(isLocationEnabled()) }
+    var contenido by remember { mutableStateOf("") }
+    val permissionsController = mainViewModel.permissionsController
+    val attendanceLoading by mainViewModel.attendanceLoading.collectAsState(false)
 
-    PermissionRequestEffect(
-        permission = Permission.COARSE_LOCATION,
-        permissionsController = permissionsController
-    ) { granted ->
-        hasPermission = granted
-        if (granted) {
-            Napier.i("PERMISO CONCEDIDO: $granted", tag = "prueba")
-            onTracker()
-        } else {
-            Napier.i("PERMISO NO CONCEDIDO: $granted", tag = "prueba")
+    LaunchedEffect(Unit) {
+        while (true) {
+            isLocationEnabled = isLocationEnabled()
+            delay(2000)
+        }
+    }
+    LaunchedEffect(Unit) {
+        try {
+            val granted = permissionsController.isPermissionGranted(Permission.COARSE_LOCATION)
+            if (!granted) {
+                permissionsController.providePermission(Permission.COARSE_LOCATION)
+                hasPermission = true
+                Napier.i("Permiso concedido tras solicitud", tag = "NewEntry")
+            } else {
+                hasPermission = true
+                Napier.i("Permiso ya estaba concedido", tag = "NewEntry")
+            }
+            mainViewModel.fetchLocation()
+        } catch (e: DeniedAlwaysException) {
+            hasPermission = false
+            mainViewModel.setError("Permiso denegado permanentemente")
+        } catch (e: DeniedException) {
+            hasPermission = false
+            mainViewModel.setError("Permiso denegado")
+        } catch (e: Exception) {
+            hasPermission = false
+            mainViewModel.setError("Error al solicitar permiso")
         }
     }
 
     ModalBottomSheet(
         onDismissRequest = {
-            onDismiss()
+            mainViewModel.setShowBottomSheetNewEntry(attendanceLoading)
         }
     ) {
-        Column(
+        Box (
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .height(400.dp)
         ) {
-            if (ultimoRegistro?.isSalida == true) {
-                MarcarSalida(hasPermission, attendanceViewModel)
-            } else {
-                MarcarIngreso(hasPermission, ultimoRegistro, attendanceViewModel)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                if (isSalida) {
+                    MarcarSalida(
+                        hasPermission = hasPermission,
+                        mainViewModel = mainViewModel,
+                        contenido = contenido,
+                        onContenidoChange = { contenido = it },
+                        sendRequest = { mainViewModel.sendEntryRequest(it, navHostController) }
+                    )
+                } else {
+                    MarcarIngreso(
+                        hasPermission = hasPermission,
+                        mainViewModel = mainViewModel,
+                        contenido = contenido,
+                        onContenidoChange = { contenido = it },
+                        sendRequest = {
+                            mainViewModel.sendEntryRequest(it, navHostController)
+                        }
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                if (hasPermission) {
+                    if(isLocationEnabled) {
+                        Text(
+                            text = "${location}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        Text(
+                            text = "Para continuar, habilita la ubicación del dispositivo.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Debe otorgar permiso de ubicación para usar esta función.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
-            if (hasPermission) {
-                Text(
-                    text = "${location}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                Text(
-                    "Se requiere permiso de ubicación para registrar.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.error
-                )
+            if (attendanceLoading) {
+                FullScreenLoading(attendanceLoading)
             }
         }
     }
@@ -210,23 +267,36 @@ fun NewEntry(
 @Composable
 fun MarcarIngreso(
     hasPermission: Boolean,
-    lastSalida: AttendanceUltimoRegistroResponse?,
-    attendanceViewModel: AttendanceViewModel
+    mainViewModel: MainViewModel,
+    contenido: String,
+    onContenidoChange: (String) -> Unit,
+    sendRequest: (AttendanceEntryRequest) -> Unit
 ) {
-    var contenido by remember { mutableStateOf("") }
-
     Text(
         text = "MARCAR INGRESO",
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary
     )
 
+    Spacer(Modifier.height(8.dp))
+
+    MyAssistChip(
+        label = "Permiso de ubicación requerido. Para registrar sin ubicación, visite $URL_SERVER_ONLY",
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        labelColor = MaterialTheme.colorScheme.secondary,
+        icon = TablerIcons.World,
+        onClick = { mainViewModel.urlOpener.openURL(URL_SERVER_ONLY) },
+        height = null
+    )
+
     MyOutlinedTextFieldArea(
         value = contenido,
-        onValueChange = { contenido = it },
+        onValueChange = onContenidoChange,
         label = "Contenido",
         modifier = Modifier.fillMaxWidth()
     )
+
+    Spacer(Modifier.height(8.dp))
 
     MyFilledTonalButton(
         text = "Registrar",
@@ -235,13 +305,14 @@ fun MarcarIngreso(
         textColor = MaterialTheme.colorScheme.tertiary,
         textStyle = MaterialTheme.typography.titleMedium,
         onClickAction = {
-            val request = attendanceViewModel.buildEntryRequest(
+            val request = mainViewModel.buildEntryRequest(
                 comment = contenido,
                 isSalida = false,
                 hasPermission = hasPermission
             )
+            Napier.i("BODY REQUEST: $request", tag = "Attendance")
             if (request != null) {
-                attendanceViewModel.sendEntryRequest(request)
+                sendRequest(request)
             }
         }
     )
@@ -250,17 +321,30 @@ fun MarcarIngreso(
 @Composable
 fun MarcarSalida(
     hasPermission: Boolean,
-    attendanceViewModel: AttendanceViewModel
+    mainViewModel: MainViewModel,
+    contenido: String,
+    onContenidoChange: (String) -> Unit,
+    sendRequest: (AttendanceEntryRequest) -> Unit
 ) {
-    var contenido by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    val data by attendanceViewModel.data.collectAsState()
-    val selectedMotivoSalida by attendanceViewModel.selectedMotivoSalida.collectAsState()
+    val data by mainViewModel.colaborador.collectAsState()
+    val selectedMotivoSalida by mainViewModel.selectedMotivoSalida.collectAsState()
 
     Text(
         text = "MARCAR SALIDA",
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    MyAssistChip(
+        label = "Permiso de ubicación requerido. Para registrar sin ubicación, visite $URL_SERVER_ONLY",
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        labelColor = MaterialTheme.colorScheme.secondary,
+        icon = TablerIcons.World,
+        onClick = { mainViewModel.urlOpener.openURL(URL_SERVER_ONLY) },
+        height = null
     )
 
     MyExposedDropdownMenuBox(
@@ -270,7 +354,7 @@ fun MarcarSalida(
         selectedOption = selectedMotivoSalida,
         options = data?.motivosSalida ?: emptyList(),
         onOptionSelected = { selectedOption ->
-            attendanceViewModel.setSelectedMotivoSalida(selectedOption)
+            mainViewModel.setSelectedMotivoSalida(selectedOption)
             expanded = false
         },
         getOptionDescription = { it.descripcion },
@@ -280,10 +364,12 @@ fun MarcarSalida(
 
     MyOutlinedTextFieldArea(
         value = contenido,
-        onValueChange = { contenido = it },
+        onValueChange = onContenidoChange,
         label = "Contenido",
         modifier = Modifier.fillMaxWidth()
     )
+
+    Spacer(Modifier.height(8.dp))
 
     MyFilledTonalButton(
         text = "Registrar",
@@ -292,13 +378,16 @@ fun MarcarSalida(
         textColor = MaterialTheme.colorScheme.error,
         textStyle = MaterialTheme.typography.titleMedium,
         onClickAction = {
-            val request = attendanceViewModel.buildEntryRequest(
+            val request = mainViewModel.buildEntryRequest(
                 comment = contenido,
                 isSalida = true,
                 hasPermission = hasPermission
             )
+
+            Napier.i("BODY REQUEST: $request", tag = "Attendance")
+
             if (request != null) {
-                attendanceViewModel.sendEntryRequest(request)
+                sendRequest(request)
             }
         }
     )
@@ -346,7 +435,7 @@ fun TimeCard(
                 buttonColor = if (data.ultimoRegistro?.isSalida == false) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
                 textColor = if (data.ultimoRegistro?.isSalida == false) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                 onClickAction = {
-                    attendanceViewModel.setShowBottomSheetNewEntry(true)
+                    attendanceViewModel.mainViewModel.setShowBottomSheetNewEntry(true)
                 }
             )
 

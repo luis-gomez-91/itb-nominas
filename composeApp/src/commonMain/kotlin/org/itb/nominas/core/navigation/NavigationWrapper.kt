@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import org.itb.nominas.core.utils.BiometryViewModel
 import org.itb.nominas.features.attendance.ui.AttendanceScreen
 import org.itb.nominas.features.deductions.ui.DeductionScreen
+import org.itb.nominas.features.history.ui.HistoryScreen
 import org.itb.nominas.features.home.ui.HomeScreen
 import org.itb.nominas.features.login.ui.LoginScreen
 import org.itb.nominas.features.payroll.ui.PayRollScreen
@@ -25,5 +26,6 @@ fun NavigationWrapper(
         composable<DeductionsRoute> { DeductionScreen(navController) }
         composable<AttendanceRoute> { AttendanceScreen(navController) }
         composable<TrackerRoute> { TrackerScreen(navController) }
+        composable<HistoryRoute> { HistoryScreen(navController) }
     }
 }

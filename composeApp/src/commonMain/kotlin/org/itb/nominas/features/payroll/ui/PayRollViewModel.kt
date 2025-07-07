@@ -40,6 +40,7 @@ class PayRollViewModel(
                 Napier.e("PayRoll: $response", tag = "PayRollViewModel")
                 response.data?.let {
                     _data.value = it
+                    mainViewModel.setTitle("Roles de Pago")
                 }
                 _error.value = response.error
 

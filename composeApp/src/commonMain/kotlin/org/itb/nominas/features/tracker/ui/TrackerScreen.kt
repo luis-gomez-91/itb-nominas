@@ -31,8 +31,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import compose.icons.TablerIcons
+import compose.icons.tablericons.Scan
 import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.location.COARSE_LOCATION
+import dev.icerock.moko.permissions.location.LOCATION
 import io.github.aakira.napier.Napier
 import org.itb.nominas.core.components.MainScaffold
 import org.itb.nominas.core.components.MyAddButton
@@ -120,6 +122,7 @@ fun Screen(
             ) {
                 MyAddButton(
                     modifier = Modifier.align(Alignment.Center),
+                    icon = TablerIcons.Scan,
                     onclick = {
                         trackerViewModel.setShowScanner(true)
                     }
@@ -177,7 +180,7 @@ fun BottomSheetScanner(
     var hasPermission by remember { mutableStateOf(false) }
 
     PermissionRequestEffect(
-        permission = Permission.COARSE_LOCATION,
+        permission = Permission.LOCATION,
         permissionsController = trackerViewModel.mainViewModel.permissionsController
     ) { granted ->
         hasPermission = granted

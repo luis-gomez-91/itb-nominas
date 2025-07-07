@@ -230,16 +230,18 @@ fun ThemeSettings (
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row {
+                    Row (
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
-                            imageVector = themeItem.icon,
+                            imageVector = if (appTheme == theme) themeItem.iconSelect else themeItem.icon,
                             contentDescription = themeItem.text,
                             tint = MaterialTheme.colorScheme.secondary
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text =  themeItem.text,
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = themeItem.text,
+                            style = if (appTheme == theme) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.secondary
                         )
                     }

@@ -56,6 +56,7 @@ import org.itb.nominas.core.components.MyOutlinedTextField
 import org.itb.nominas.core.platform.getPlatform
 import org.itb.nominas.features.login.ui.domain.DrawerItem
 import org.itb.nominas.core.components.FullScreenLoading
+import org.itb.nominas.core.components.MyInfoAlert
 import org.itb.nominas.core.utils.BiometryViewModel
 import org.itb.nominas.core.utils.Theme
 import org.jetbrains.compose.resources.painterResource
@@ -81,7 +82,10 @@ fun LoginScreen (
     val password by loginViewModel.password.collectAsState()
     val verPassword by loginViewModel.verPassword.collectAsState(false)
     val isLoading by loginViewModel.isLoading.collectAsState(false)
+    val biometryLoading by biometryViewModel.isLoading.collectAsState(false)
     val error by loginViewModel.error.collectAsState(null)
+    val biometryError by biometryViewModel.error.collectAsState(null)
+    val info by biometryViewModel.info.collectAsState(null)
     val themeSelect by loginViewModel.mainViewModel.selectedTheme.collectAsState()
 
     val logo = when (themeSelect) {
@@ -91,7 +95,7 @@ fun LoginScreen (
     }
 
     Box {
-        FullScreenLoading(isLoading = isLoading)
+        FullScreenLoading(isLoading = (isLoading || biometryLoading))
 
         Column (
             modifier = Modifier
@@ -147,7 +151,7 @@ fun LoginScreen (
                 )
                 val drawerItem = when(getPlatform().name) {
                     "Android" -> DrawerItem("Ingresar con huella o Face ID", TablerIcons.Fingerprint)
-                    "iOS" -> DrawerItem("Ingresar con Face ID o Touch ID", TablerIcons.FaceId)
+                    "IOS" -> DrawerItem("Ingresar con Face ID o Touch ID", TablerIcons.FaceId)
                     else -> DrawerItem("Ingresar con credenciales biométricas", TablerIcons.Fingerprint)
                 }
 
@@ -159,7 +163,7 @@ fun LoginScreen (
                 ) {
                     TextButton(
                         onClick = {
-                            biometryViewModel.auth(navHostController)
+                            biometryViewModel.auth(navHostController, loginViewModel.sessionManager, loginViewModel.service)
                         }
                     ) {
                         Text(
@@ -231,6 +235,30 @@ fun LoginScreen (
             showAlert = true
         )
     }
+
+    biometryError?.let {
+        MyErrorAlert(
+            titulo = "Error",
+            mensaje = it.message,
+            onDismiss = {
+                biometryViewModel.clearError()
+            },
+            showAlert = true
+        )
+    }
+
+    info?.let {
+        MyInfoAlert (
+            titulo = "",
+            mensaje = it,
+            onDismiss = {
+                biometryViewModel.clearInfo()
+            },
+            showAlert = true
+        )
+    }
+
+
 }
 
 @Composable

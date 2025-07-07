@@ -1,6 +1,8 @@
 package org.itb.nominas.features.home.data
 
 import kotlinx.serialization.Serializable
+import org.itb.nominas.features.attendance.data.response.AttendanceSalidaResponse
+import org.itb.nominas.features.attendance.data.response.AttendanceUltimoRegistroResponse
 
 @Serializable
 data class ColaboradorResponse(
@@ -18,5 +20,7 @@ data class ColaboradorResponse(
     val urlSistema: String,
     val nombreSistema: String,
     val username: String,
-    val qr_url: String
+    val qr_url: String,
+    var ultimoRegistro: AttendanceUltimoRegistroResponse?,
+    val motivosSalida: List<AttendanceSalidaResponse>
 )

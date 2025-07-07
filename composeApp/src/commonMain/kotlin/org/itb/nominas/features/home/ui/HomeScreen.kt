@@ -1,6 +1,7 @@
 package org.itb.nominas.features.home.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -28,6 +29,7 @@ import org.itb.nominas.core.components.MyErrorAlert
 import org.itb.nominas.core.components.ShimmerLoadingAnimation
 import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.navigation.DeductionsRoute
+import org.itb.nominas.core.navigation.HistoryRoute
 import org.itb.nominas.core.navigation.PayRollRoute
 import org.itb.nominas.core.navigation.TrackerRoute
 import org.itb.nominas.core.utils.AppSettings
@@ -41,10 +43,6 @@ fun HomeScreen(
     navHostController: NavHostController,
     homeViewModel: HomeViewModel = koinViewModel()
 ) {
-
-//    val tokenKey = AppSettings.getToken()?.access ?: "no-token"
-//    val homeViewModel: HomeViewModel = koinViewModel(key = "home-$tokenKey")
-
     MainScaffold(
         navController = navHostController,
         mainViewModel = homeViewModel.mainViewModel,
@@ -60,42 +58,52 @@ fun Screen(
 ) {
     val data by homeViewModel.data.collectAsState(null)
     val error by homeViewModel.error.collectAsState(null)
+    val mainError by homeViewModel.mainViewModel.error.collectAsState(null)
     val isLoading by homeViewModel.isLoading.collectAsState(false)
+    val attendanceLoading by homeViewModel.mainViewModel.attendanceLoading.collectAsState(false)
 
     LaunchedEffect(AppSettings.getToken()) {
         homeViewModel.loadHome()
     }
 
-    if (isLoading) {
+    if (isLoading || attendanceLoading) {
         Column (
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             ShimmerLoadingAnimation(3)
         }
     } else {
-        data?.modulos?.let { modulos ->
-            LazyColumn (
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items (modulos) { modulo ->
-                    ModuloItem(
-                        modulo = modulo,
-                        onClick = { rutaSeleccionada ->
-                            when (rutaSeleccionada) {
-                                PayRollRoute.route -> navHostController.navigate(PayRollRoute)
-                                DeductionsRoute.route -> navHostController.navigate(DeductionsRoute)
-                                AttendanceRoute.route -> navHostController.navigate(AttendanceRoute)
-                                TrackerRoute.route -> navHostController.navigate(TrackerRoute)
-                                else -> {}
+        Box(modifier = Modifier.fillMaxSize()) {
+            data?.modulos?.let { modulos ->
+                LazyColumn (
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items (modulos) { modulo ->
+                        ModuloItem(
+                            modulo = modulo,
+                            onClick = { rutaSeleccionada ->
+                                when (rutaSeleccionada) {
+                                    PayRollRoute.route -> navHostController.navigate(PayRollRoute)
+                                    DeductionsRoute.route -> navHostController.navigate(DeductionsRoute)
+                                    AttendanceRoute.route -> navHostController.navigate(AttendanceRoute)
+                                    TrackerRoute.route -> navHostController.navigate(TrackerRoute)
+                                    HistoryRoute.route -> navHostController.navigate(HistoryRoute)
+                                    else -> {}
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
+
+//            if (attendanceLoading) {
+//                FullScreenLoading(attendanceLoading)
+//            }
         }
+
     }
 
     error?.let {
@@ -106,6 +114,17 @@ fun Screen(
                 homeViewModel.clearError()
                 homeViewModel.clearData()
                 homeViewModel.mainViewModel.logout(navHostController)
+            },
+            showAlert = true
+        )
+    }
+
+    mainError?.let {
+        MyErrorAlert(
+            titulo = "Error",
+            mensaje = it.message,
+            onDismiss = {
+                homeViewModel.mainViewModel.clearError()
             },
             showAlert = true
         )

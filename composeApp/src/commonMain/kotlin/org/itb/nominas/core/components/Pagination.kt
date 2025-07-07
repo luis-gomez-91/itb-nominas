@@ -32,7 +32,7 @@ fun Pagination(
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp)
-            .background(color = MaterialTheme.colorScheme.surfaceContainer),
+            .background(color = MaterialTheme.colorScheme.secondaryContainer),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ){
@@ -45,14 +45,14 @@ fun Pagination(
             Icon(
                 imageVector = EvaIcons.Outline.ChevronLeft,
                 contentDescription = "Back",
-                tint = if (actualPage > 1  && !isLoading) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outlineVariant
+                tint = if (actualPage > 1  && !isLoading) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant
             )
         }
 
         Text(
             text = "${actualPage}/${paging.lastPage}",
             style = MaterialTheme.typography.bodyLarge,
-            color = if (!isLoading) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outlineVariant
+            color = if (!isLoading) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant
         )
 
         IconButton(
@@ -64,7 +64,7 @@ fun Pagination(
             Icon(
                 imageVector = EvaIcons.Outline.ChevronRight,
                 contentDescription = "Next",
-                tint = if (actualPage < (paging.lastPage)  && !isLoading) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outlineVariant
+                tint = if (actualPage < (paging.lastPage)  && !isLoading) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant
             )
         }
     }

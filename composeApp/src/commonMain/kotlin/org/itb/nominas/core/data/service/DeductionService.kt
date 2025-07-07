@@ -13,12 +13,12 @@ import org.itb.nominas.features.deductions.data.DeductionResponse
 class DeductionService(
     private val client: HttpClient
 ) {
-    suspend fun fetchDeductions(endPoint: String): BaseResponse<List<DeductionResponse>> {
+    suspend fun fetchDeductions(endPoint: String, page: Int,): BaseResponse<DeductionResponse> {
         return try {
-            val response = client.get("${URL_SERVER}$endPoint/") {
+            val response = client.get("${URL_SERVER}$endPoint/$page/") {
                 contentType(ContentType.Application.Json)
             }
-            response.body<BaseResponse<List<DeductionResponse>>>()
+            response.body<BaseResponse<DeductionResponse>>()
 
         } catch (e: Exception) {
             BaseResponse(
@@ -27,5 +27,4 @@ class DeductionService(
             )
         }
     }
-
 }

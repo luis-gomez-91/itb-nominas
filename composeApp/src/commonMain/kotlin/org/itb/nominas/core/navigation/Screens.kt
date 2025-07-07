@@ -15,9 +15,6 @@ object HomeRoute : Screen {
 object LoginRoute
 
 @Serializable
-object ProfileRoute
-
-@Serializable
 object PayRollRoute : Screen {
     override val route = "rolconsulta"
 }
@@ -36,3 +33,9 @@ object AttendanceRoute : Screen {
 object TrackerRoute : Screen {
     override val route = "bitacora-asistencia"
 }
+
+@Serializable
+object HistoryRoute : Screen {
+    override val route = "historialasistencia"
+}
+

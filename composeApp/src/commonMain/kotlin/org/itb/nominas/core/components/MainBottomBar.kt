@@ -5,11 +5,14 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -24,7 +27,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,14 +46,16 @@ import compose.icons.evaicons.Fill
 import compose.icons.evaicons.Outline
 import compose.icons.evaicons.fill.Home
 import compose.icons.evaicons.fill.LogOut
-import compose.icons.evaicons.fill.Person
 import compose.icons.evaicons.outline.Home
 import compose.icons.evaicons.outline.Person
+import compose.icons.tablericons.CalendarEvent
+import compose.icons.tablericons.Login
+import compose.icons.tablericons.Logout
 import compose.icons.tablericons.Qrcode
 import org.itb.nominas.core.domain.BottomBarItem
 import org.itb.nominas.core.navigation.HomeRoute
-import org.itb.nominas.core.navigation.ProfileRoute
 import org.itb.nominas.core.utils.MainViewModel
+import org.itb.nominas.features.attendance.ui.NewEntry
 import org.itb.nominas.features.home.data.ColaboradorResponse
 import org.itb.nominas.features.home.ui.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -64,34 +71,51 @@ fun MainBottomBar(
     val currentRoute = navBackStackEntry?.destination?.route
     val bottomSheetProfile by mainViewModel.bottomSheetProfile.collectAsState(false)
     val bottomSheetQR by mainViewModel.bottomSheetQR.collectAsState(false)
+    val bottomSheetNewEntry by mainViewModel.showBottomSheetNewEntry.collectAsState(false)
     val isHomeSelected = currentRoute == HomeRoute::class.qualifiedName
-    val isProfileSelected = currentRoute == ProfileRoute::class.qualifiedName
     val colaborador by mainViewModel.colaborador.collectAsState(null)
+    val location by mainViewModel.location.collectAsState()
+    val isSalida by remember(colaborador?.ultimoRegistro) {
+        derivedStateOf { colaborador?.ultimoRegistro?.isSalida == true }
+    }
 
     val navigationIcons = listOf<BottomBarItem>(
-        BottomBarItem(
-            onclick = { mainViewModel.setBottomSheetQR(true) },
-            label = "QR Code",
-            icon = TablerIcons.Qrcode,
-            color = if (isProfileSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            style = if (isProfileSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall,
-            isSelected = isProfileSelected
-        ),
         BottomBarItem(
             onclick = { navController.navigate(HomeRoute) },
             label = "Inicio",
             icon = if (isHomeSelected) EvaIcons.Fill.Home else EvaIcons.Outline.Home,
             color = if (isHomeSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            style = if (isHomeSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall,
+            style = if (isHomeSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelSmall,
             isSelected = isHomeSelected
         ),
+
         BottomBarItem(
             onclick = { mainViewModel.setBottomSheetProfile(true) },
             label = "Perfil",
-            icon = if (isProfileSelected) EvaIcons.Fill.Person else EvaIcons.Outline.Person,
-            color = if (isProfileSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            style = if (isProfileSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodySmall,
-            isSelected = isProfileSelected
+            icon = EvaIcons.Outline.Person,
+            color = MaterialTheme.colorScheme.secondary,
+            style = MaterialTheme.typography.labelSmall,
+            isSelected = false
+        ),
+
+        BottomBarItem(
+            onclick = { mainViewModel.setBottomSheetQR(true) },
+            label = "QR Code",
+            icon = TablerIcons.Qrcode,
+            color = MaterialTheme.colorScheme.secondary,
+            style = MaterialTheme.typography.labelSmall,
+            isSelected = false
+        ),
+
+        BottomBarItem(
+            onclick = {
+                mainViewModel.setShowBottomSheetNewEntry(true)
+            },
+            label = if (isSalida) "Marcar Salida" else "Marcar Ingreso",
+            icon = if (isSalida) TablerIcons.Logout else TablerIcons.Login,
+            color = if (isSalida) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+            style = MaterialTheme.typography.labelSmall,
+            isSelected = false
         )
     )
 
@@ -105,7 +129,7 @@ fun MainBottomBar(
         ) {
             navigationIcons.forEach {
                 val animatedIconSize by animateDpAsState(
-                    targetValue = if (it.isSelected) 28.dp else 24.dp,
+                    targetValue = 24.dp,
                     animationSpec = tween(durationMillis = 300)
                 )
 
@@ -129,7 +153,8 @@ fun MainBottomBar(
                         Text(
                             text = it.label,
                             style = it.style,
-                            color = animatedColor
+                            color = animatedColor,
+                            textAlign = TextAlign.Center,
                         )
                     },
                     colors = NavigationBarItemDefaults.colors(
@@ -162,9 +187,19 @@ fun MainBottomBar(
         if (bottomSheetQR) {
             BottomSheetQR(
                 qr = it.qr_url,
+                photo = it.foto ?: "https://encrypted-tbn0.gstatic.com/im ages?q=tbn:ANd9GcQTz02QJMGkQbLyOApa3_ZDRqr_QiGJh120ZQ&s",
                 onDismiss = {
                     mainViewModel.setBottomSheetQR(false)
                 }
+            )
+        }
+
+        if (bottomSheetNewEntry) {
+            NewEntry(
+                location = location,
+                mainViewModel = mainViewModel,
+                isSalida = it.ultimoRegistro?.isSalida == true,
+                navHostController = navController
             )
         }
     }
@@ -174,7 +209,8 @@ fun MainBottomBar(
 @Composable
 fun BottomSheetQR(
     qr: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    photo: String
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss
@@ -187,22 +223,41 @@ fun BottomSheetQR(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Código QR",
+                text = "Identificador de colaborador",
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleMedium
             )
 
-            AsyncImage(
-                model = qr,
-                contentDescription = "QR Code",
-                contentScale = ContentScale.Fit,
+            Spacer(Modifier.height(32.dp))
+
+            Box(
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
-                    .aspectRatio(1f)
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            )
+                    .aspectRatio(1f),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                AsyncImage(
+                    model = qr,
+                    contentDescription = "QR Code",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                )
+
+                AsyncImage(
+                    model = photo,
+                    contentDescription = "Avatar",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .offset(y = (-60).dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.background),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
     }
 }
@@ -240,14 +295,15 @@ fun BottomSheetProfile(
             Text(
                 text = colaborador.nombre,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
 
-            Text(
-                text = TextFormat("Última conexión:", if (colaborador.last_conection_date != null) "${colaborador.last_conection_date} ${colaborador.last_conection_time}" else "sin coincidencias"),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+            MyAssistChip(
+                label = TextFormat("Última conexión:", if (colaborador.last_conection_date != null) "${colaborador.last_conection_date} (${colaborador.last_conection_time})" else "sin coincidencias").toString(),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                labelColor = MaterialTheme.colorScheme.secondary,
+                icon = TablerIcons.CalendarEvent
             )
 
             Spacer(Modifier.height(8.dp))
