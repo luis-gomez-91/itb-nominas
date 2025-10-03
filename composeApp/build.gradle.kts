@@ -39,7 +39,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.ktor.utils.jvm)
             implementation(libs.play.services.location)
-
+//            implementation("io.sentry:sentry-android:8.22.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)

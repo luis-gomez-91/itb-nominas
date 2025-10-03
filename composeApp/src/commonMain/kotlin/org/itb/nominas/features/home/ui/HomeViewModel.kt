@@ -50,6 +50,7 @@ class HomeViewModel(
                 Napier.i("$response", tag="home")
 
             } catch (e: Exception) {
+                Napier.e("$e", tag="home")
                 _error.value = ErrorResponse(code = "error", message = "${e.message}")
             } finally {
                 _isLoading.value = false

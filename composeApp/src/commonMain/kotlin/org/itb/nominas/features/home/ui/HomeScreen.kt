@@ -32,7 +32,6 @@ import org.itb.nominas.core.navigation.DeductionsRoute
 import org.itb.nominas.core.navigation.HistoryRoute
 import org.itb.nominas.core.navigation.PayRollRoute
 import org.itb.nominas.core.navigation.TrackerRoute
-import org.itb.nominas.core.utils.AppSettings
 import org.itb.nominas.features.home.data.ModuloResponse
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -61,8 +60,9 @@ fun Screen(
     val mainError by homeViewModel.mainViewModel.error.collectAsState(null)
     val isLoading by homeViewModel.isLoading.collectAsState(false)
     val attendanceLoading by homeViewModel.mainViewModel.attendanceLoading.collectAsState(false)
+    val searchQuery by homeViewModel.mainViewModel.searchQuery.collectAsState(null)
 
-    LaunchedEffect(AppSettings.getToken()) {
+    LaunchedEffect(Unit) {
         homeViewModel.loadHome()
     }
 
@@ -75,13 +75,19 @@ fun Screen(
     } else {
         Box(modifier = Modifier.fillMaxSize()) {
             data?.modulos?.let { modulos ->
+
+                val modulosFilter = modulos.filter { modulo ->
+                    searchQuery.isNullOrBlank() ||
+                    modulo.nombre.contains(searchQuery?:"", ignoreCase = true)
+                }
+
                 LazyColumn (
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items (modulos) { modulo ->
+                    items (modulosFilter) { modulo ->
                         ModuloItem(
                             modulo = modulo,
                             onClick = { rutaSeleccionada ->
@@ -98,7 +104,6 @@ fun Screen(
                     }
                 }
             }
-
 //            if (attendanceLoading) {
 //                FullScreenLoading(attendanceLoading)
 //            }
@@ -108,8 +113,8 @@ fun Screen(
 
     error?.let {
         MyErrorAlert(
-            titulo = "Sesión expirada",
-            mensaje = "Tu sesión ha caducado por motivos de seguridad. Por favor, inicia sesión nuevamente para continuar.",
+            titulo = "Ocurrio un error inesperado",
+            mensaje = it.message,
             onDismiss = {
                 homeViewModel.clearError()
                 homeViewModel.clearData()
@@ -136,7 +141,6 @@ fun ModuloItem (
     modulo: ModuloResponse,
     onClick: (String) -> Unit
 ) {
-
     MyCard(
         onClick = {
             onClick(modulo.url)
@@ -154,17 +158,7 @@ fun ModuloItem (
                 modifier = Modifier
                     .height(64.dp)
                     .aspectRatio(1f)
-                    .padding(8.dp),
-//                onSuccess = {
-//                    Napier.i("Imagen cargada correctamente: ${modulo.imagen}", tag = "AsyncImage")
-//                },
-//                onError = {
-//                    Napier.e("Error al cargar imagen: ${modulo.imagen}", it.result.throwable, tag = "AsyncImage")
-//                },
-//                onLoading = {
-//                    Napier.d("Cargando imagen: ${modulo.imagen}", tag = "AsyncImage")
-//                }
-
+                    .padding(8.dp)
             )
             Column(modifier = Modifier.padding(horizontal = 8.dp)) {
                 Text(

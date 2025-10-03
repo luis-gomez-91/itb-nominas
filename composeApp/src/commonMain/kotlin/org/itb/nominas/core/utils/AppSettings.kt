@@ -60,4 +60,14 @@ object AppSettings {
             return null
         }
     }
+
+    fun clearCredentials() {
+        settings.remove("username")
+        settings.remove("password")
+    }
+
+    fun clearAll() {
+        clearToken()
+        clearCredentials()
+    }
 }

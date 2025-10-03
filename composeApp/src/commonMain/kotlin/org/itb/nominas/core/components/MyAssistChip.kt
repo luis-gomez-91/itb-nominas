@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun MyAssistChip(
+    modifier: Modifier = Modifier,
     label: String,
     containerColor: Color,
     labelColor: Color,

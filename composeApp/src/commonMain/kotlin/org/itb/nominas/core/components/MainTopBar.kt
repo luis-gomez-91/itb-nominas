@@ -79,6 +79,7 @@ fun MainTopBar(
                                 value = searchQuery,
                                 onValueChange = { newQuery ->
                                     searchQuery = newQuery
+                                    mainViewModel.setSearchQuery(newQuery)
                                 },
                                 textStyle = MaterialTheme.typography.bodyMedium,
                                 colors = TextFieldDefaults.colors(
@@ -105,7 +106,7 @@ fun MainTopBar(
                         } else {
                             Text(
                                 text = title?: "",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.secondary,
                             )
                         }
