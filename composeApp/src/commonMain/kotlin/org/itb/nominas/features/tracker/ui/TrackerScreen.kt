@@ -226,11 +226,7 @@ fun BottomSheetScanner(
                     imagePickerHandler = {},
                     onCompletion = { scannedText ->
                         Napier.i(scannedText, tag = "Bitacora")
-                        val request = trackerViewModel.buildEntryRequest(scannedText.toInt())
-                        Napier.i("$request", tag = "Bitacora")
-                        if (request != null) {
-                            trackerViewModel.createTracker(request)
-                        }
+                        trackerViewModel.buildEntryRequest(scannedText.toInt())
                         onDismiss()
                     },
                     onFailure = { error ->

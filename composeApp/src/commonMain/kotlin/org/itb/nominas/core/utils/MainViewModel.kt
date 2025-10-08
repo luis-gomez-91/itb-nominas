@@ -6,6 +6,8 @@ import androidx.navigation.NavHostController
 import com.mohaberabi.lokalip.LokalIpFactory
 import dev.icerock.moko.permissions.PermissionsController
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -153,14 +155,26 @@ class MainViewModel(
         longitude = 0.0,
         countryCode = "EC"
     )
-    private val _location = MutableStateFlow<LocationItem?>(prueba)
+    private val _location = MutableStateFlow<LocationItem?>(null)
     val location: StateFlow<LocationItem?> = _location
 
+    private val _isLoadingLocation = MutableStateFlow(false)
+    val isLoadingLocation: StateFlow<Boolean> = _isLoadingLocation
+
     fun fetchLocation() {
-        viewModelScope.launch {
-            val result = locationService.fetchLocation()
-            Napier.i("LOCATION: $result", tag = "NewEntry")
-            _location.value = result
+        if (_isLoadingLocation.value) return // Evitar múltiples llamadas
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoadingLocation.value = true
+            try {
+                val result = locationService.fetchLocation()
+                Napier.i("LOCATION: $result", tag = "NewEntry")
+                _location.value = result
+            } catch (e: Exception) {
+                Napier.e("Error fetching location: ${e.message}", tag = "NewEntry")
+            } finally {
+                _isLoadingLocation.value = false
+            }
         }
     }
 
@@ -208,10 +222,12 @@ class MainViewModel(
         _selectedMotivoSalida.value = newValue
     }
 
+
     fun buildEntryRequest(
         comment: String,
         isSalida: Boolean = false,
         hasPermission: Boolean,
+        location: LocationItem? = null  // Recibir como parámetro
     ): AttendanceEntryRequest? {
         val idMotivoSalida = _selectedMotivoSalida.value?.id
 
@@ -230,18 +246,18 @@ class MainViewModel(
             return null
         }
 
-        fetchLocation()
-        _location.value?.let {
+        // Usar la ubicación recibida como parámetro, no la del StateFlow
+        if (location != null) {
             return AttendanceEntryRequest(
                 comment = comment,
                 clientAddress = getLocalIp(),
-                latitude = it.latitude,
-                longitude = it.longitude,
-                idMotivoSalida = idMotivoSalida
+                latitude = location.latitude,
+                longitude = location.longitude,
+                idMotivoSalida = idMotivoSalida,
             )
         }
 
-        setError("Ocurrió un error inesperado, reinicie la app e intente nuevamente.")
+        setError("No se pudo obtener la ubicación. Intenta de nuevo.")
         return null
     }
 

@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -163,13 +164,17 @@ fun NewEntry(
     var contenido by remember { mutableStateOf("") }
     val permissionsController = mainViewModel.permissionsController
     val attendanceLoading by mainViewModel.attendanceLoading.collectAsState(false)
+    val currentLocation by mainViewModel.location.collectAsState()
 
+    // Verificar ubicación cada 2 segundos
     LaunchedEffect(Unit) {
         while (true) {
             isLocationEnabled = isLocationEnabled()
             delay(2000)
         }
     }
+
+    // Solicitar permisos y obtener ubicación una sola vez
     LaunchedEffect(Unit) {
         try {
             val granted = permissionsController.isPermissionGranted(Permission.COARSE_LOCATION)
@@ -181,6 +186,8 @@ fun NewEntry(
                 hasPermission = true
                 Napier.i("Permiso ya estaba concedido", tag = "NewEntry")
             }
+
+            // Obtener la ubicación y esperar el resultado
             mainViewModel.fetchLocation()
         } catch (e: DeniedAlwaysException) {
             hasPermission = false
@@ -199,7 +206,7 @@ fun NewEntry(
             mainViewModel.setShowBottomSheetNewEntry(attendanceLoading)
         }
     ) {
-        Box (
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(400.dp)
@@ -230,20 +237,29 @@ fun NewEntry(
                         }
                     )
                 }
+
                 Spacer(Modifier.height(8.dp))
+
                 if (hasPermission) {
-                    if(isLocationEnabled) {
+                    if (isLocationEnabled && currentLocation != null) {
                         Text(
-                            text = "${location}",
+                            text = "$currentLocation",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
-                    } else {
+                    } else if (!isLocationEnabled) {
                         Text(
                             text = "Para continuar, habilita la ubicación del dispositivo.",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        Text(
+                            text = "Obteniendo ubicación...",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -272,6 +288,9 @@ fun MarcarIngreso(
     onContenidoChange: (String) -> Unit,
     sendRequest: (AttendanceEntryRequest) -> Unit
 ) {
+    val currentLocation by mainViewModel.location.collectAsState()
+    val isLoadingLocation by mainViewModel.isLoadingLocation.collectAsState()
+
     Text(
         text = "MARCAR INGRESO",
         style = MaterialTheme.typography.titleMedium,
@@ -304,11 +323,13 @@ fun MarcarIngreso(
         buttonColor = MaterialTheme.colorScheme.tertiaryContainer,
         textColor = MaterialTheme.colorScheme.tertiary,
         textStyle = MaterialTheme.typography.titleMedium,
+        enabled = hasPermission && currentLocation != null && !isLoadingLocation,
         onClickAction = {
             val request = mainViewModel.buildEntryRequest(
                 comment = contenido,
                 isSalida = false,
-                hasPermission = hasPermission
+                hasPermission = hasPermission,
+                location = currentLocation
             )
             Napier.i("BODY REQUEST: $request", tag = "Attendance")
             if (request != null) {
@@ -329,6 +350,8 @@ fun MarcarSalida(
     var expanded by remember { mutableStateOf(false) }
     val data by mainViewModel.colaborador.collectAsState()
     val selectedMotivoSalida by mainViewModel.selectedMotivoSalida.collectAsState()
+    val currentLocation by mainViewModel.location.collectAsState()
+    val isLoadingLocation by mainViewModel.isLoadingLocation.collectAsState()
 
     Text(
         text = "MARCAR SALIDA",
@@ -377,15 +400,15 @@ fun MarcarSalida(
         buttonColor = MaterialTheme.colorScheme.errorContainer,
         textColor = MaterialTheme.colorScheme.error,
         textStyle = MaterialTheme.typography.titleMedium,
+        enabled = hasPermission && currentLocation != null && selectedMotivoSalida != null && !isLoadingLocation,
         onClickAction = {
             val request = mainViewModel.buildEntryRequest(
                 comment = contenido,
                 isSalida = true,
-                hasPermission = hasPermission
+                hasPermission = hasPermission,
+                location = currentLocation
             )
-
             Napier.i("BODY REQUEST: $request", tag = "Attendance")
-
             if (request != null) {
                 sendRequest(request)
             }

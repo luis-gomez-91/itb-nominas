@@ -8,16 +8,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,11 +30,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -88,29 +96,43 @@ fun LoginScreen (
     val info by biometryViewModel.info.collectAsState(null)
     val themeSelect by loginViewModel.mainViewModel.selectedTheme.collectAsState()
 
+    // Detectar si el teclado está visible
+    val imeInsets = WindowInsets.ime
+    val density = LocalDensity.current
+    val isKeyboardVisible by remember {
+        derivedStateOf {
+            imeInsets.getBottom(density) > 0
+        }
+    }
+
     val logo = when (themeSelect) {
         Theme.Dark -> Res.drawable.logo_dark
         Theme.Light -> Res.drawable.logo
         Theme.SystemDefault -> { if (isSystemInDarkTheme()) Res.drawable.logo_dark else Res.drawable.logo }
     }
 
+    val scrollState = rememberScrollState()
+
     Box {
         FullScreenLoading(isLoading = (isLoading || biometryLoading))
 
         Column (
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-
+            verticalArrangement = if (isKeyboardVisible) Arrangement.Top else Arrangement.Center
         ) {
             Column (
                 modifier = Modifier
                     .fillMaxWidth()
                     .safeContentPadding()
-                    .padding(start = 32.dp, end = 32.dp, bottom = 64.dp)
-                    .weight(1f),
-                verticalArrangement = Arrangement.Center
+                    .padding(start = 32.dp, end = 32.dp, top = 32.dp, bottom = 32.dp)
+                    .then(
+                        if (isKeyboardVisible) Modifier.weight(1f) else Modifier
+                    ),
+                verticalArrangement = if (isKeyboardVisible) Arrangement.Center else Arrangement.Center
             ) {
                 Image(
                     painter = painterResource(logo),
@@ -197,28 +219,32 @@ fun LoginScreen (
                 )
             }
 
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-            ) {
-                val imageWidth = (maxWidth - (32.dp * (logos.size - 1)) - 64.dp) / logos.size
-                LazyRow(
+            // Ocultar imágenes inferiores cuando el teclado está visible
+            if (!isKeyboardVisible) {
+                BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                        .background(Color.White)
+                        .padding(vertical = 16.dp)
                 ) {
-                    items(logos) { logo ->
-                        Image(
-                            painter = painterResource(logo.resource),
-                            contentDescription = logo.description,
-                            modifier = Modifier
-                                .width(imageWidth)
-                                .aspectRatio(1f)
-                                .height(100.dp),
-                            contentScale = ContentScale.Crop
-                        )
+                    val imageWidth = (maxWidth - (32.dp * (logos.size - 1)) - 64.dp) / logos.size
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp),
+                        horizontalArrangement = Arrangement.spacedBy(32.dp)
+                    ) {
+                        items(logos) { logo ->
+                            Image(
+                                painter = painterResource(logo.resource),
+                                contentDescription = logo.description,
+                                modifier = Modifier
+                                    .width(imageWidth)
+                                    .aspectRatio(1f)
+                                    .height(100.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
                     }
                 }
             }
@@ -257,8 +283,6 @@ fun LoginScreen (
             showAlert = true
         )
     }
-
-
 }
 
 @Composable

@@ -106,8 +106,8 @@ android {
         applicationId = "org.itb.nominas"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 9
-        versionName = "0.1.9"
+        versionCode = 11
+        versionName = "0.2.1"
     }
     packaging {
         resources {

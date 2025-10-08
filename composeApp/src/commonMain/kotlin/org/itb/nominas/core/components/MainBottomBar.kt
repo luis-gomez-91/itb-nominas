@@ -84,8 +84,8 @@ fun MainBottomBar(
             onclick = { navController.navigate(HomeRoute) },
             label = "Inicio",
             icon = if (isHomeSelected) EvaIcons.Fill.Home else EvaIcons.Outline.Home,
-            color = if (isHomeSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            style = if (isHomeSelected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.secondary,
+            style = MaterialTheme.typography.labelSmall,
             isSelected = isHomeSelected
         ),
 

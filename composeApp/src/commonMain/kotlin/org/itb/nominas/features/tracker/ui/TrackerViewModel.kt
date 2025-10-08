@@ -74,24 +74,30 @@ class TrackerViewModel(
         }
     }
 
-    fun buildEntryRequest(idPersonal: Int?): TrackerRequest? {
-        mainViewModel.fetchLocation()
-        Napier.i("ID: $idPersonal", tag = "Bitacora")
-        Napier.i("LOCATION: ${mainViewModel.location.value}", tag = "Bitacora")
-        mainViewModel.location.value?.let {
-            idPersonal?.let { id ->
-                return TrackerRequest(
-                    clientAddress = mainViewModel.getLocalIp(),
-                    latitud = it.latitude,
-                    longitud = it.longitude,
-                    idPersonal = id
-                )
+    fun buildEntryRequest(idPersonal: Int?) {
+        viewModelScope.launch {
+            mainViewModel.fetchLocation()
+            val location = mainViewModel.location.value
+            Napier.i("ID: $idPersonal", tag = "Bitacora")
+            Napier.i("LOCATION: ${mainViewModel.location.value}", tag = "Bitacora")
+            when {
+                location == null -> {
+                    setError("Agregue permisos de Ubicación")
+                }
+                idPersonal == null -> {
+                    setError("Error al leer código QR")
+                }
+                else -> {
+                    val request = TrackerRequest(
+                        clientAddress = mainViewModel.getLocalIp(),
+                        latitud = location.latitude,
+                        longitud = location.longitude,
+                        idPersonal = idPersonal
+                    )
+                    createTracker(request)
+                }
             }
-            setError("Error al leer código QR")
-            return null
         }
-        setError("Agregue permisos de Ubicación")
-        return null
     }
 
     fun createTracker(body: TrackerRequest) {

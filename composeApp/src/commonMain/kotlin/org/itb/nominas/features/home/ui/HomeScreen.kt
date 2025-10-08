@@ -113,8 +113,8 @@ fun Screen(
 
     error?.let {
         MyErrorAlert(
-            titulo = "Ocurrio un error inesperado",
-            mensaje = it.message,
+            titulo = "Tu sesión ha expirado",
+            mensaje = "Por seguridad, inicia sesión nuevamente.",
             onDismiss = {
                 homeViewModel.clearError()
                 homeViewModel.clearData()
