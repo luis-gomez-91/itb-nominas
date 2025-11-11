@@ -19,6 +19,7 @@ import org.itb.nominas.core.data.service.MainService
 import org.itb.nominas.core.domain.LocationItem
 import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.navigation.LoginRoute
+import org.itb.nominas.core.network.SessionManager
 import org.itb.nominas.core.platform.LocationService
 import org.itb.nominas.core.platform.URLOpener
 import org.itb.nominas.core.platform.isLocationEnabled
@@ -32,7 +33,8 @@ class MainViewModel(
     val service: MainService,
     val urlOpener: URLOpener,
     val permissionsController: PermissionsController,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val sessionManager: SessionManager
 ): ViewModel() {
 
     private val _colaborador = MutableStateFlow<ColaboradorResponse?>(null)
@@ -112,6 +114,8 @@ class MainViewModel(
             } catch (e: Exception) {
                 Napier.e("Excepción de red durante el logout: ${e.message}", e, tag = "LogoutFlow")
             } finally {
+                sessionManager.onLogout()
+
                 AppSettings.clearToken()
                 _colaborador.value = null
                 _title.value = null
@@ -149,12 +153,6 @@ class MainViewModel(
         }
     }
 
-//    LOCATION
-    val prueba = LocationItem(
-        latitude = 0.0,
-        longitude = 0.0,
-        countryCode = "EC"
-    )
     private val _location = MutableStateFlow<LocationItem?>(null)
     val location: StateFlow<LocationItem?> = _location
 
@@ -286,6 +284,16 @@ class MainViewModel(
                 setSelectedMotivoSalida(null)
             }
         }
+    }
+
+    fun clearAllData() {
+        _colaborador.value = null
+        _location.value = null
+        _bottomSheetProfile.value = false
+        _bottomSheetQR.value = false
+        _showBottomSheetNewEntry.value = false
+        _error.value = null
+        // Limpiar cualquier otro StateFlow que tengas
     }
 
 }

@@ -242,11 +242,13 @@ fun DetalleItem(
                 )
             }
 
-            Text(
-                text = detalle.hora,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            detalle.hora?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         // Info adicional

@@ -1,7 +1,6 @@
 package com.luisdev.marknotes.data.remote.service
 
 import io.github.aakira.napier.Napier
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -12,17 +11,18 @@ import io.ktor.http.isSuccess
 import org.itb.nominas.features.login.data.LoginRequest
 import org.itb.nominas.core.data.response.BaseResponse
 import org.itb.nominas.core.data.response.ErrorResponse
+import org.itb.nominas.core.network.HttpClientManager
 import org.itb.nominas.features.login.data.LoginResponse
 import org.itb.nominas.core.utils.URL_SERVER
 
 class LoginService(
-    private val client: HttpClient
+    private val clientManager: HttpClientManager
 ) {
     suspend fun fetchLogin(body: LoginRequest): BaseResponse<LoginResponse> {
         return try {
             Napier.i("Intentando login para: ${body.username}", tag = "LoginService")
 
-            val response: HttpResponse = client.post("${URL_SERVER}auth/login/") {
+            val response: HttpResponse = clientManager.getClient().post("${URL_SERVER}auth/login/") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
             }

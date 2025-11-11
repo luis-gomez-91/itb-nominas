@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HistoryDetailResponse(
-    val fecha: String,
-    val hora: String,
+    val fecha: String?,
+    val hora: String?,
     val tipo: String,
     val ip: String?,
     val latitud: Double?,

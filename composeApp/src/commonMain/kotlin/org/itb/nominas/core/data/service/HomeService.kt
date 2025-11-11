@@ -1,7 +1,6 @@
 package org.itb.nominas.core.data.service
 
 import io.github.aakira.napier.Napier
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
@@ -13,18 +12,18 @@ import io.ktor.http.contentType
 import kotlinx.coroutines.CancellationException
 import org.itb.nominas.core.data.response.BaseResponse
 import org.itb.nominas.core.data.response.ErrorResponse
+import org.itb.nominas.core.network.HttpClientManager
 import org.itb.nominas.core.utils.URL_SERVER
 import org.itb.nominas.features.home.data.HomeResponse
 
 class HomeService(
-    private val client: HttpClient
+    private val clientManager: HttpClientManager
 ) {
-
     suspend fun fetchHome(): BaseResponse<HomeResponse> {
         return try {
             Napier.d("Iniciando request a /api/home/", tag = "HomeService")
 
-            val response = client.get("${URL_SERVER}home/") {
+            val response = clientManager.getClient().get("${URL_SERVER}home/") {
                 contentType(ContentType.Application.Json)
             }
 

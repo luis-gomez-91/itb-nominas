@@ -1,5 +1,4 @@
 package org.itb.nominas.features.login.ui
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
@@ -72,6 +71,10 @@ class LoginViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                Napier.i("Limpiando datos del usuario anterior", tag = "LoginViewModel")
+                mainViewModel.clearAllData()
+                AppSettings.clearAll()
+
                 Napier.i("Intentando login para: ${_username.value}", tag = "LoginViewModel")
 
                 val request = LoginRequest(
@@ -80,7 +83,7 @@ class LoginViewModel(
                 )
                 val response = service.fetchLogin(request)
 
-                Napier.i("Respuesta recibida: data=${response}", tag = "LoginViewModel")
+                Napier.i("Respuesta recibida: status=${response.status}", tag = "LoginViewModel")
 
                 when (response.status) {
                     "success" -> {
@@ -95,11 +98,13 @@ class LoginViewModel(
                             )
 
                             // Guardar tokens y credenciales
+                            Napier.i("Guardando tokens y credenciales", tag = "LoginViewModel")
                             AppSettings.setToken(tokens)
                             AppSettings.setUsername(_username.value)
                             AppSettings.setPassword(_password.value)
 
                             // Notificar al SessionManager
+                            Napier.i("Notificando login exitoso al SessionManager", tag = "LoginViewModel")
                             sessionManager.onLoginSuccess()
 
                             Napier.i("Login exitoso, navegando a Home", tag = "LoginViewModel")

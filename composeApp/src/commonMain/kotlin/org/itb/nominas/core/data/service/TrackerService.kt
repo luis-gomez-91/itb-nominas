@@ -1,7 +1,6 @@
 package org.itb.nominas.core.data.service
 
 import io.github.aakira.napier.Napier
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -11,13 +10,14 @@ import io.ktor.http.contentType
 import org.itb.nominas.core.data.response.BaseResponse
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.response.MessageResponse
+import org.itb.nominas.core.network.HttpClientManager
 import org.itb.nominas.core.utils.URL_SERVER
 import org.itb.nominas.features.tracker.data.TrackerRequest
 import org.itb.nominas.features.tracker.data.TrackerResponse
 
 
 class TrackerService(
-    private val client: HttpClient
+    private val clientManager: HttpClientManager
 ) {
     suspend fun fetchTracker(
         endPoint: String,
@@ -25,7 +25,7 @@ class TrackerService(
         searchQuery: String? = null
     ): BaseResponse<TrackerResponse> {
         return try {
-            val response = client.get("${URL_SERVER}$endPoint/$page") {
+            val response = clientManager.getClient().get("${URL_SERVER}$endPoint/$page") {
                 contentType(ContentType.Application.Json)
                 url {
                     searchQuery?.takeIf { it.isNotBlank() }?.let {
@@ -45,7 +45,7 @@ class TrackerService(
 
     suspend fun newTracker(endPoint: String, body: TrackerRequest): BaseResponse<MessageResponse> {
         return try {
-            val response = client.post("${URL_SERVER}$endPoint/create/") {
+            val response = clientManager.getClient().post("${URL_SERVER}$endPoint/create/") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
             }

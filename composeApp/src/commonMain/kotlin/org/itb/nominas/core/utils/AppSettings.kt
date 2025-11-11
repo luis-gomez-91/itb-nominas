@@ -1,9 +1,7 @@
-// org.itb.nominas.core.utils.AppSettings.kt
 package org.itb.nominas.core.utils
 
 import org.itb.nominas.core.platform.getSettings
 import org.itb.nominas.features.login.data.TokenResponse
-
 
 object AppSettings {
     private val settings by lazy {
@@ -15,8 +13,7 @@ object AppSettings {
     }
 
     fun getUsername(): String? {
-        val username = settings.getStringOrNull(KEY_USERNAME)
-        return username
+        return settings.getStringOrNull(KEY_USERNAME)
     }
 
     fun setPassword(pass: String) {
@@ -26,8 +23,7 @@ object AppSettings {
     }
 
     fun getPassword(): String? {
-        val password = settings.getStringOrNull(KEY_PASSWORD)
-        return password
+        return settings.getStringOrNull(KEY_PASSWORD)
     }
 
     fun setTheme(theme: Theme) {
@@ -36,8 +32,7 @@ object AppSettings {
 
     fun getTheme(): Theme {
         val value = settings.getString(KEY_THEME, defaultValue = Theme.SystemDefault.name)
-        val theme = Theme.entries.firstOrNull { it.name == value } ?: Theme.SystemDefault
-        return theme
+        return Theme.entries.firstOrNull { it.name == value } ?: Theme.SystemDefault
     }
 
     fun setToken(token: TokenResponse) {
@@ -56,14 +51,13 @@ object AppSettings {
 
         if (access != null && refresh != null) {
             return TokenResponse(access = access, refresh = refresh)
-        } else {
-            return null
         }
+        return null
     }
 
     fun clearCredentials() {
-        settings.remove("username")
-        settings.remove("password")
+        settings.remove(KEY_USERNAME)
+        settings.remove(KEY_PASSWORD)
     }
 
     fun clearAll() {
