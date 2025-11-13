@@ -39,7 +39,6 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.ktor.utils.jvm)
             implementation(libs.play.services.location)
-//            implementation("io.sentry:sentry-android:8.22.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -63,8 +62,6 @@ kotlin {
             implementation(libs.kotlin.serialization)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.calf.file.picker)
-            implementation(libs.calf.file.picker.coil)
             implementation(libs.peekaboo.ui)
             implementation(libs.peekaboo.image.picker)
             implementation(libs.filekit.core)
@@ -106,8 +103,8 @@ android {
         applicationId = "org.itb.nominas"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 14
-        versionName = "1.0.1"
+        versionCode = 18
+        versionName = "1.0.2"
     }
     packaging {
         resources {

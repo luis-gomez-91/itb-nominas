@@ -46,6 +46,7 @@ import org.itb.nominas.core.components.TextItem
 import org.itb.nominas.features.tracker.data.TrackerItemResponse
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
+import qrscanner.CameraLens
 import qrscanner.QrScanner
 
 
@@ -222,6 +223,7 @@ fun BottomSheetScanner(
                         .clipToBounds()
                         .clip(shape = RoundedCornerShape(size = 14.dp)),
                     flashlightOn = false,
+                    cameraLens = CameraLens.Back,
                     openImagePicker = false,
                     imagePickerHandler = {},
                     onCompletion = { scannedText ->
@@ -230,7 +232,6 @@ fun BottomSheetScanner(
                         onDismiss()
                     },
                     onFailure = { error ->
-                        // Manejo de error si quieres
                     }
                 )
             }

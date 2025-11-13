@@ -10,33 +10,31 @@ androidx-core = "1.17.0"
 androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.9.0"
 androidx-testExt = "1.3.0"
-composeMultiplatform = "1.8.1"
+composeMultiplatform = "1.9.3"
 junit = "4.13.2"
 kotlin = "2.1.21"
 
 
 coil = "3.0.0-alpha08"
-ktor = "2.3.12"
-navigation-compose = "2.9.0-beta01"
+ktor = "3.3.2"
+navigation-compose = "2.9.1"
 peekaboo = "0.5.2"
 composeMaterial3 = "1.2.1"
 
 mokoMVVM = "0.16.1"
 mokoBiometry = "0.4.0"
-mokoPermissions = "0.19.1"
+mokoPermissions = "0.20.1"
 
-kotlinxDatetime = "0.6.2"
+kotlinxDatetime = "0.7.1"
 filekitCore = "0.8.7"
-calfFilePickerCoil = "0.5.1"
-calfFilePicker = "0.5.3"
 russhwolfSettings = "1.3.0"
 napierLogger = "2.7.1"
 composeIcons = "1.1.1"
 materialIconsExtended = "1.7.3"
-koin = "3.6.0-Beta4"
-koinCompose = "1.2.0-Beta4"
+koin = "4.1.1"
+koinCompose = "4.1.1"
 playServicesLocation = "21.3.0"
-qrKit = "2.0.0"
+qrKit = "3.1.3"
 lokal-ip = "0.0.2"
 
 [libraries]
@@ -78,8 +76,6 @@ moko-biometry-compose = { module = "dev.icerock.moko:biometry-compose", version.
 moko-permissions-location = { module = "dev.icerock.moko:permissions-location", version.ref = "mokoPermissions" }
 moko-permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "mokoPermissions" }
 
-calf-file-picker = { module = "com.mohamedrejeb.calf:calf-file-picker", version.ref = "calfFilePicker" }
-calf-file-picker-coil = { module = "com.mohamedrejeb.calf:calf-file-picker-coil", version.ref = "calfFilePickerCoil" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekitCore" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitCore" }
 russhwolf-settings-multiplatform = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "russhwolfSettings" }

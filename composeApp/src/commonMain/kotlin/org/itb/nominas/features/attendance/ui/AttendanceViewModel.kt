@@ -6,16 +6,17 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 import org.itb.nominas.core.data.response.ErrorResponse
 import org.itb.nominas.core.data.service.AttendanceService
 import org.itb.nominas.core.navigation.AttendanceRoute
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.features.attendance.data.response.AttendanceResponse
+import kotlin.time.ExperimentalTime
 
 
 class AttendanceViewModel(
@@ -58,6 +59,7 @@ class AttendanceViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getCurrentFormattedTime(): String {
         val now = Clock.System.now()
         val zone = TimeZone.currentSystemDefault()
@@ -70,6 +72,7 @@ class AttendanceViewModel(
         return "$hour:$minute:$second"
     }
 
+    @OptIn(ExperimentalTime::class)
     fun getCurrentFormattedDate(): String {
         val now = Clock.System.now()
         val zone = TimeZone.currentSystemDefault()
@@ -83,7 +86,6 @@ class AttendanceViewModel(
             DayOfWeek.FRIDAY -> "Viernes"
             DayOfWeek.SATURDAY -> "Sábado"
             DayOfWeek.SUNDAY -> "Domingo"
-            else -> ""
         }
 
         val month = when (datetime.month) {
@@ -99,10 +101,9 @@ class AttendanceViewModel(
             Month.OCTOBER -> "Octubre"
             Month.NOVEMBER -> "Noviembre"
             Month.DECEMBER -> "Diciembre"
-            else -> ""
         }
 
-        val dayOfMonth = datetime.dayOfMonth.toString()
+        val dayOfMonth = datetime.day.toString()
         val year = datetime.year.toString()
 
         return "$dayOfWeek, $dayOfMonth de $month de $year"
