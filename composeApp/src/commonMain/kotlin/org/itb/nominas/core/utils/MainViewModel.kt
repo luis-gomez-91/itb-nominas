@@ -246,12 +246,14 @@ class MainViewModel(
 
         // Usar la ubicación recibida como parámetro, no la del StateFlow
         if (location != null) {
+            val deviceInfo: DeviceInfo = DeviceInfo()
             return AttendanceEntryRequest(
                 comment = comment,
                 clientAddress = getLocalIp(),
                 latitude = location.latitude,
                 longitude = location.longitude,
                 idMotivoSalida = idMotivoSalida,
+                userAgent = deviceInfo.getUserAgent()
             )
         }
 

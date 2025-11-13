@@ -8,5 +8,6 @@ data class AttendanceEntryRequest(
     val clientAddress: String,
     val latitude: Double,
     val longitude: Double,
-    val idMotivoSalida: Int?
+    val idMotivoSalida: Int?,
+    val userAgent: String?
 )
