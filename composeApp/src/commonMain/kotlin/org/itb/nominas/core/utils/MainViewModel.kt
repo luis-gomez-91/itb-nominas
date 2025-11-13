@@ -296,4 +296,23 @@ class MainViewModel(
         // Limpiar cualquier otro StateFlow que tengas
     }
 
+
+    private val _showEntryButton = MutableStateFlow(false)
+    val showEntryButton: StateFlow<Boolean> = _showEntryButton
+
+    fun fetchTieneHorarioApp() {
+        viewModelScope.launch {
+            try {
+                val result = service.fetchTieneHorario()
+                val cleanResult = result.removeSurrounding("\"")
+                _showEntryButton.value = cleanResult.lowercase() == "si"
+                Napier.i("Result: $result, Show button: ${_showEntryButton.value}", tag = "tieneHorario")
+            } catch (e: Exception) {
+                Napier.e("Error: $e", tag = "tieneHorario")
+                _error.value = ErrorResponse(code = "error", message = "${e.message}")
+                _showEntryButton.value = false // Por defecto no mostrar en caso de error
+            }
+        }
+    }
+
 }

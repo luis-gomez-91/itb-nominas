@@ -7,6 +7,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import org.itb.nominas.core.data.request.RefreshTokenRequest
 import org.itb.nominas.core.data.request.ReportRequest
 import org.itb.nominas.core.data.response.BaseResponse
@@ -84,4 +85,27 @@ class MainService (
             )
         }
     }
+
+    suspend fun fetchTieneHorario(): String {
+        return try {
+            val response = clientManager.getClient().post("${URL_SERVER}tiene_horario/") {
+                contentType(ContentType.Application.Json)
+            }
+
+            val raw = response.bodyAsText()
+            Napier.i("Respuesta cruda del servidor: $raw", tag = "tieneHorario")
+
+            // Verificar si la respuesta fue exitosa
+            if (!response.status.isSuccess()) {
+                throw Exception("Error del servidor: ${response.status}")
+            }
+
+            raw ?: throw Exception("Respuesta vacía del servidor")
+
+        } catch (e: Exception) {
+            Napier.e("Error en fetchTieneHorario: ${e.message}", tag = "tieneHorario")
+            throw e // O retornar un valor por defecto: "no"
+        }
+    }
+
 }

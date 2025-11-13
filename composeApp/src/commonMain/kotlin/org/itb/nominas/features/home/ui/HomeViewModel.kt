@@ -42,6 +42,7 @@ class HomeViewModel(
                 _data.value?.let {
                     mainViewModel.setTitle(it.colaborador.nombre)
                     mainViewModel.setColaborador(it.colaborador)
+                    mainViewModel.fetchTieneHorarioApp()
                 }
                 Napier.i("$response", tag="home")
 

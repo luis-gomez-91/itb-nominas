@@ -431,6 +431,9 @@ fun TimeCard(
         }
     }
 
+    // Campo para ocultar el boton de marcar si no se le ha asignado aun un horario
+    val showEntryButton by attendanceViewModel.mainViewModel.showEntryButton.collectAsState()
+
     MyCard {
         Column(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -450,17 +453,19 @@ fun TimeCard(
 
             Spacer(Modifier.height(16.dp))
 
-            MyFilledTonalButton(
-                text = if (data.ultimoRegistro?.isSalida == false) "Registrar Ingreso" else "Registrar Salida",
-                enabled = true,
-                icon = EvaIcons.Outline.Clock,
-                textStyle = MaterialTheme.typography.titleLarge,
-                buttonColor = if (data.ultimoRegistro?.isSalida == false) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
-                textColor = if (data.ultimoRegistro?.isSalida == false) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                onClickAction = {
-                    attendanceViewModel.mainViewModel.setShowBottomSheetNewEntry(true)
-                }
-            )
+            if (showEntryButton) {
+                MyFilledTonalButton(
+                    text = if (data.ultimoRegistro?.isSalida == false) "Registrar Ingreso" else "Registrar Salida",
+                    enabled = true,
+                    icon = EvaIcons.Outline.Clock,
+                    textStyle = MaterialTheme.typography.titleLarge,
+                    buttonColor = if (data.ultimoRegistro?.isSalida == false) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+                    textColor = if (data.ultimoRegistro?.isSalida == false) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    onClickAction = {
+                        attendanceViewModel.mainViewModel.setShowBottomSheetNewEntry(true)
+                    }
+                )
+            }
 
             data.marcacionActual?.let {
                 Text(

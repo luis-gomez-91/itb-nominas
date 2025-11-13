@@ -79,6 +79,9 @@ fun MainBottomBar(
         derivedStateOf { colaborador?.ultimoRegistro?.isSalida == true }
     }
 
+    // Campo para ocultar el boton de marcar si no se le ha asignado aun un horario
+    val showEntryButton by mainViewModel.showEntryButton.collectAsState()
+
     val navigationIcons = listOf<BottomBarItem>(
         BottomBarItem(
             onclick = { navController.navigate(HomeRoute) },
@@ -105,19 +108,23 @@ fun MainBottomBar(
             color = MaterialTheme.colorScheme.secondary,
             style = MaterialTheme.typography.labelSmall,
             isSelected = false
-        ),
-
-        BottomBarItem(
-            onclick = {
-                mainViewModel.setShowBottomSheetNewEntry(true)
-            },
-            label = if (isSalida) "Marcar Salida" else "Marcar Ingreso",
-            icon = if (isSalida) TablerIcons.Logout else TablerIcons.Login,
-            color = if (isSalida) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
-            style = MaterialTheme.typography.labelSmall,
-            isSelected = false
         )
-    )
+    ).let { baseList ->
+        if (showEntryButton) {
+            baseList + BottomBarItem(
+                onclick = {
+                    mainViewModel.setShowBottomSheetNewEntry(true)
+                },
+                label = if (isSalida) "Marcar Salida" else "Marcar Ingreso",
+                icon = if (isSalida) TablerIcons.Logout else TablerIcons.Login,
+                color = if (isSalida) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                style = MaterialTheme.typography.labelSmall,
+                isSelected = false
+            )
+        } else {
+            baseList
+        }
+    }
 
     Surface (
         modifier = Modifier
