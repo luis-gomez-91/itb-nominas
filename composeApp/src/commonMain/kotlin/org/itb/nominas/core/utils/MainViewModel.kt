@@ -6,10 +6,9 @@ import androidx.navigation.NavHostController
 import com.mohaberabi.lokalip.LokalIpFactory
 import dev.icerock.moko.permissions.PermissionsController
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.itb.nominas.core.data.request.RefreshTokenRequest
 import org.itb.nominas.core.data.request.ReportRequest
@@ -104,7 +103,6 @@ class MainViewModel(
         _reportError.value = null
     }
 
-
     fun logout(navHostController: NavHostController) {
         viewModelScope.launch {
             try {
@@ -154,26 +152,54 @@ class MainViewModel(
     }
 
     private val _location = MutableStateFlow<LocationItem?>(null)
-    val location: StateFlow<LocationItem?> = _location
+    val location: StateFlow<LocationItem?> = _location.asStateFlow()
 
     private val _isLoadingLocation = MutableStateFlow(false)
-    val isLoadingLocation: StateFlow<Boolean> = _isLoadingLocation
+    val isLoadingLocation: StateFlow<Boolean> = _isLoadingLocation.asStateFlow()
+
+    private val _locationFetchFailed = MutableStateFlow(false)
+    val locationFetchFailed: StateFlow<Boolean> = _locationFetchFailed.asStateFlow()
+
+    private val _showGPSDialog = MutableStateFlow(false)
+    val showGPSDialog: StateFlow<Boolean> = _showGPSDialog.asStateFlow()
 
     fun fetchLocation() {
-        if (_isLoadingLocation.value) return // Evitar múltiples llamadas
-
-        viewModelScope.launch(Dispatchers.IO) {
-            _isLoadingLocation.value = true
+        viewModelScope.launch {
             try {
+                _isLoadingLocation.value = true
+                _locationFetchFailed.value = false
+                _location.value = null
+
+                Napier.i("Iniciando fetchLocation", tag = "MainViewModel")
+
                 val result = locationService.fetchLocation()
-                Napier.i("LOCATION: $result", tag = "NewEntry")
-                _location.value = result
+
+                if (result != null) {
+                    _location.value = result
+                    _locationFetchFailed.value = false
+                    Napier.i("Ubicación obtenida exitosamente: $result", tag = "MainViewModel")
+                } else {
+                    _locationFetchFailed.value = true
+                    _showGPSDialog.value = true
+                    Napier.e("No se pudo obtener ubicación", tag = "MainViewModel")
+                }
             } catch (e: Exception) {
-                Napier.e("Error fetching location: ${e.message}", tag = "NewEntry")
+                _locationFetchFailed.value = true
+                _showGPSDialog.value = true
+                Napier.e("Error al obtener ubicación: ${e.message}", tag = "MainViewModel")
             } finally {
                 _isLoadingLocation.value = false
             }
         }
+    }
+
+    fun dismissGPSDialog() {
+        _showGPSDialog.value = false
+    }
+
+    fun retryLocation() {
+        _showGPSDialog.value = false
+        fetchLocation()
     }
 
     private val _appLastVersion = MutableStateFlow<LastVersionReponse?>(null)
@@ -199,7 +225,6 @@ class MainViewModel(
         return localIpAddress
     }
 
-
     fun setError(newValue: String) {
         _error.value = ErrorResponse(code = "error", message = newValue)
     }
@@ -220,12 +245,11 @@ class MainViewModel(
         _selectedMotivoSalida.value = newValue
     }
 
-
     fun buildEntryRequest(
         comment: String,
         isSalida: Boolean = false,
         hasPermission: Boolean,
-        location: LocationItem? = null  // Recibir como parámetro
+        location: LocationItem? = null
     ): AttendanceEntryRequest? {
         val idMotivoSalida = _selectedMotivoSalida.value?.id
 
@@ -244,9 +268,8 @@ class MainViewModel(
             return null
         }
 
-        // Usar la ubicación recibida como parámetro, no la del StateFlow
         if (location != null) {
-            val deviceInfo: DeviceInfo = DeviceInfo()
+            val deviceInfo = DeviceInfo()
             return AttendanceEntryRequest(
                 comment = comment,
                 clientAddress = getLocalIp(),
@@ -274,6 +297,10 @@ class MainViewModel(
                 val response = service.newEntry(request)
                 if (response.status == "success") {
                     setShowBottomSheetNewEntry(false)
+                    _colaborador.value?.ultimoRegistro?.let {
+                        it.isSalida = !it.isSalida
+                    }
+
                     navHostController.navigate(AttendanceRoute)
                 } else {
                     _error.value = response.error ?: ErrorResponse("error", "Error desconocido del servidor")
@@ -291,13 +318,14 @@ class MainViewModel(
     fun clearAllData() {
         _colaborador.value = null
         _location.value = null
+        _isLoadingLocation.value = false
+        _locationFetchFailed.value = false
+        _showGPSDialog.value = false
         _bottomSheetProfile.value = false
         _bottomSheetQR.value = false
         _showBottomSheetNewEntry.value = false
         _error.value = null
-        // Limpiar cualquier otro StateFlow que tengas
     }
-
 
     private val _showEntryButton = MutableStateFlow(false)
     val showEntryButton: StateFlow<Boolean> = _showEntryButton
@@ -312,9 +340,8 @@ class MainViewModel(
             } catch (e: Exception) {
                 Napier.e("Error: $e", tag = "tieneHorario")
                 _error.value = ErrorResponse(code = "error", message = "${e.message}")
-                _showEntryButton.value = false // Por defecto no mostrar en caso de error
+                _showEntryButton.value = false
             }
         }
     }
-
 }

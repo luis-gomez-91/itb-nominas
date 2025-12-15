@@ -27,9 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,10 +72,11 @@ fun MainBottomBar(
     val bottomSheetNewEntry by mainViewModel.showBottomSheetNewEntry.collectAsState(false)
     val isHomeSelected = currentRoute == HomeRoute::class.qualifiedName
     val colaborador by mainViewModel.colaborador.collectAsState(null)
-    val location by mainViewModel.location.collectAsState()
-    val isSalida by remember(colaborador?.ultimoRegistro) {
-        derivedStateOf { colaborador?.ultimoRegistro?.isSalida == true }
-    }
+//    val isSalida by remember(colaborador?.ultimoRegistro) {
+//        derivedStateOf { colaborador?.ultimoRegistro?.isSalida == true }
+//    }
+
+    val isSalida = colaborador?.ultimoRegistro?.isSalida == true
 
     // Campo para ocultar el boton de marcar si no se le ha asignado aun un horario
     val showEntryButton by mainViewModel.showEntryButton.collectAsState()
@@ -110,14 +109,14 @@ fun MainBottomBar(
             isSelected = false
         )
     ).let { baseList ->
-        if (showEntryButton) {
+        if (!showEntryButton) {
             baseList + BottomBarItem(
                 onclick = {
                     mainViewModel.setShowBottomSheetNewEntry(true)
                 },
                 label = if (isSalida) "Marcar Salida" else "Marcar Ingreso",
                 icon = if (isSalida) TablerIcons.Logout else TablerIcons.Login,
-                color = if (isSalida) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                color = if (isSalida) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
                 style = MaterialTheme.typography.labelSmall,
                 isSelected = false
             )
@@ -203,7 +202,6 @@ fun MainBottomBar(
 
         if (bottomSheetNewEntry) {
             NewEntry(
-                location = location,
                 mainViewModel = mainViewModel,
                 isSalida = it.ultimoRegistro?.isSalida == true,
                 navHostController = navController

@@ -3,28 +3,35 @@ package org.itb.nominas.features.attendance.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -38,10 +45,9 @@ import compose.icons.tablericons.World
 import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
 import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.location.COARSE_LOCATION
+import dev.icerock.moko.permissions.location.LOCATION
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
-import org.itb.nominas.core.components.FullScreenLoading
 import org.itb.nominas.core.components.MainScaffold
 import org.itb.nominas.core.components.MyAssistChip
 import org.itb.nominas.core.components.MyCard
@@ -51,12 +57,13 @@ import org.itb.nominas.core.components.MyFilledTonalButton
 import org.itb.nominas.core.components.MyOutlinedTextFieldArea
 import org.itb.nominas.core.components.ShimmerLoadingAnimation
 import org.itb.nominas.core.components.TextFormat
-import org.itb.nominas.core.domain.LocationItem
+import org.itb.nominas.core.platform.SettingsOpener
 import org.itb.nominas.core.platform.isLocationEnabled
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.core.utils.URL_SERVER_ONLY
 import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
 import org.itb.nominas.features.attendance.data.response.AttendanceResponse
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -154,7 +161,6 @@ fun Screen(
 @OptIn(ExperimentalMaterial3Api::class, KoinExperimentalAPI::class)
 @Composable
 fun NewEntry(
-    location: LocationItem?,
     mainViewModel: MainViewModel,
     isSalida: Boolean,
     navHostController: NavHostController
@@ -165,6 +171,10 @@ fun NewEntry(
     val permissionsController = mainViewModel.permissionsController
     val attendanceLoading by mainViewModel.attendanceLoading.collectAsState(false)
     val currentLocation by mainViewModel.location.collectAsState()
+    val locationFetchFailed by mainViewModel.locationFetchFailed.collectAsState()
+    val showGPSDialog by mainViewModel.showGPSDialog.collectAsState()
+    val isLoadingLocation by mainViewModel.isLoadingLocation.collectAsState()
+    val settingsOpener: SettingsOpener = koinInject()
 
     // Verificar ubicación cada 2 segundos
     LaunchedEffect(Unit) {
@@ -177,17 +187,16 @@ fun NewEntry(
     // Solicitar permisos y obtener ubicación una sola vez
     LaunchedEffect(Unit) {
         try {
-            val granted = permissionsController.isPermissionGranted(Permission.COARSE_LOCATION)
+            val granted = permissionsController.isPermissionGranted(Permission.LOCATION)
             if (!granted) {
-                permissionsController.providePermission(Permission.COARSE_LOCATION)
+                permissionsController.providePermission(Permission.LOCATION)
                 hasPermission = true
-                Napier.i("Permiso concedido tras solicitud", tag = "NewEntry")
+                Napier.i("Permiso FINE_LOCATION concedido tras solicitud", tag = "NewEntry")
             } else {
                 hasPermission = true
-                Napier.i("Permiso ya estaba concedido", tag = "NewEntry")
+                Napier.i("Permiso FINE_LOCATION ya estaba concedido", tag = "NewEntry")
             }
 
-            // Obtener la ubicación y esperar el resultado
             mainViewModel.fetchLocation()
         } catch (e: DeniedAlwaysException) {
             hasPermission = false
@@ -201,80 +210,186 @@ fun NewEntry(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = {
-            mainViewModel.setShowBottomSheetNewEntry(attendanceLoading)
-        }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                if (isSalida) {
-                    MarcarSalida(
-                        hasPermission = hasPermission,
-                        mainViewModel = mainViewModel,
-                        contenido = contenido,
-                        onContenidoChange = { contenido = it },
-                        sendRequest = { mainViewModel.sendEntryRequest(it, navHostController) }
-                    )
-                } else {
-                    MarcarIngreso(
-                        hasPermission = hasPermission,
-                        mainViewModel = mainViewModel,
-                        contenido = contenido,
-                        onContenidoChange = { contenido = it },
-                        sendRequest = {
-                            mainViewModel.sendEntryRequest(it, navHostController)
-                        }
+    // Diálogo para solicitar activar GPS
+    if (showGPSDialog) {
+        AlertDialog(
+            onDismissRequest = { mainViewModel.dismissGPSDialog() },
+            title = {
+                Text(
+                    "GPS Desactivado",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        "Para obtener tu ubicación precisa, necesitas activar el GPS en la configuración de tu dispositivo.",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        settingsOpener.openLocationSettings()
+                        mainViewModel.dismissGPSDialog()
+                    }
+                ) {
+                    Text("Abrir Configuración")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        mainViewModel.dismissGPSDialog()
+                        mainViewModel.retryLocation()
+                    }
+                ) {
+                    Text("Reintentar")
+                }
+            }
+        )
+    }
 
-                Spacer(Modifier.height(8.dp))
+    ModalBottomSheet(
+        onDismissRequest = {
+            if (!attendanceLoading) {
+                mainViewModel.setShowBottomSheetNewEntry(false)
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Barra de progreso en la parte superior
+            if (attendanceLoading) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-                if (hasPermission) {
-                    if (isLocationEnabled && currentLocation != null) {
-                        Text(
-                            text = "$currentLocation",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    if (isSalida) {
+                        MarcarSalida(
+                            hasPermission = hasPermission,
+                            mainViewModel = mainViewModel,
+                            contenido = contenido,
+                            onContenidoChange = { contenido = it },
+                            sendRequest = {
+                                mainViewModel.sendEntryRequest(it, navHostController)
+                            },
+                            isLoading = attendanceLoading
                         )
-                    } else if (!isLocationEnabled) {
+                    } else {
+                        MarcarIngreso(
+                            hasPermission = hasPermission,
+                            mainViewModel = mainViewModel,
+                            contenido = contenido,
+                            onContenidoChange = { contenido = it },
+                            sendRequest = {
+                                mainViewModel.sendEntryRequest(it, navHostController)
+                            },
+                            isLoading = attendanceLoading
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    if (hasPermission) {
+                        when {
+                            // Cargando ubicación
+                            isLoadingLocation -> {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "📍 Obteniendo ubicación GPS precisa...",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                            // Ubicación obtenida exitosamente
+                            isLocationEnabled && currentLocation != null && !isLoadingLocation -> {
+                                Text(
+                                    text = "✓ Ubicación precisa obtenida: ${String.format("%.6f", currentLocation!!.latitude)}, ${String.format("%.6f", currentLocation!!.longitude)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF4CAF50),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                            // GPS desactivado
+                            !isLocationEnabled -> {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "⚠️ Para continuar, habilita la ubicación precisa del dispositivo.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    TextButton(
+                                        onClick = { settingsOpener.openLocationSettings() },
+                                        enabled = !attendanceLoading
+                                    ) {
+                                        Text("Activar GPS")
+                                    }
+                                }
+                            }
+                            // Error al obtener ubicación
+                            locationFetchFailed -> {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "❌ Error al obtener ubicación precisa. Asegúrate de tener GPS activado.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Row {
+                                        TextButton(
+                                            onClick = { mainViewModel.retryLocation() },
+                                            enabled = !attendanceLoading
+                                        ) {
+                                            Text("🔄 Reintentar")
+                                        }
+                                        Spacer(Modifier.width(8.dp))
+                                        TextButton(
+                                            onClick = { settingsOpener.openLocationSettings() },
+                                            enabled = !attendanceLoading
+                                        ) {
+                                            Text("⚙️ Configuración")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
                         Text(
-                            text = "Para continuar, habilita la ubicación del dispositivo.",
+                            text = "🔒 Debe otorgar permiso de ubicación precisa para usar esta función.",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center
                         )
-                    } else {
-                        Text(
-                            text = "Obteniendo ubicación...",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
                     }
-                } else {
-                    Text(
-                        text = "Debe otorgar permiso de ubicación para usar esta función.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
                 }
-            }
-
-            if (attendanceLoading) {
-                FullScreenLoading(attendanceLoading)
             }
         }
     }
@@ -286,7 +401,8 @@ fun MarcarIngreso(
     mainViewModel: MainViewModel,
     contenido: String,
     onContenidoChange: (String) -> Unit,
-    sendRequest: (AttendanceEntryRequest) -> Unit
+    sendRequest: (AttendanceEntryRequest) -> Unit,
+    isLoading: Boolean = false
 ) {
     val currentLocation by mainViewModel.location.collectAsState()
     val isLoadingLocation by mainViewModel.isLoadingLocation.collectAsState()
@@ -312,18 +428,19 @@ fun MarcarIngreso(
         value = contenido,
         onValueChange = onContenidoChange,
         label = "Contenido",
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !isLoading
     )
 
     Spacer(Modifier.height(8.dp))
 
     MyFilledTonalButton(
-        text = "Registrar",
+        text = if (isLoading) "Registrando..." else "Registrar",
         icon = EvaIcons.Outline.LogIn,
         buttonColor = MaterialTheme.colorScheme.tertiaryContainer,
         textColor = MaterialTheme.colorScheme.tertiary,
         textStyle = MaterialTheme.typography.titleMedium,
-        enabled = hasPermission && currentLocation != null && !isLoadingLocation,
+        enabled = hasPermission && currentLocation != null && !isLoadingLocation && !isLoading,
         onClickAction = {
             val request = mainViewModel.buildEntryRequest(
                 comment = contenido,
@@ -335,7 +452,9 @@ fun MarcarIngreso(
             if (request != null) {
                 sendRequest(request)
             }
-        }
+        },
+        isLoading = isLoading,
+        modifier = Modifier.fillMaxWidth()
     )
 }
 
@@ -345,7 +464,8 @@ fun MarcarSalida(
     mainViewModel: MainViewModel,
     contenido: String,
     onContenidoChange: (String) -> Unit,
-    sendRequest: (AttendanceEntryRequest) -> Unit
+    sendRequest: (AttendanceEntryRequest) -> Unit,
+    isLoading: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
     val data by mainViewModel.colaborador.collectAsState()
@@ -372,16 +492,18 @@ fun MarcarSalida(
 
     MyExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it },
+        onExpandedChange = { if (!isLoading) expanded = it },
         label = "Motivo",
         selectedOption = selectedMotivoSalida,
         options = data?.motivosSalida ?: emptyList(),
         onOptionSelected = { selectedOption ->
-            mainViewModel.setSelectedMotivoSalida(selectedOption)
-            expanded = false
+            if (!isLoading) {
+                mainViewModel.setSelectedMotivoSalida(selectedOption)
+                expanded = false
+            }
         },
         getOptionDescription = { it.descripcion },
-        enabled = true,
+        enabled = !isLoading,
         onSearchTextChange = {}
     )
 
@@ -389,18 +511,19 @@ fun MarcarSalida(
         value = contenido,
         onValueChange = onContenidoChange,
         label = "Contenido",
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !isLoading
     )
 
     Spacer(Modifier.height(8.dp))
 
     MyFilledTonalButton(
-        text = "Registrar",
+        text = if (isLoading) "Registrando..." else "Registrar",
         icon = EvaIcons.Outline.LogOut,
         buttonColor = MaterialTheme.colorScheme.errorContainer,
         textColor = MaterialTheme.colorScheme.error,
         textStyle = MaterialTheme.typography.titleMedium,
-        enabled = hasPermission && currentLocation != null && selectedMotivoSalida != null && !isLoadingLocation,
+        enabled = hasPermission && currentLocation != null && selectedMotivoSalida != null && !isLoadingLocation && !isLoading,
         onClickAction = {
             val request = mainViewModel.buildEntryRequest(
                 comment = contenido,
@@ -412,9 +535,12 @@ fun MarcarSalida(
             if (request != null) {
                 sendRequest(request)
             }
-        }
+        },
+        isLoading = isLoading,
+        modifier = Modifier.fillMaxWidth()
     )
 }
+
 
 @Composable
 fun TimeCard(

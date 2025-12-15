@@ -5,6 +5,6 @@ import org.itb.nominas.core.data.response.MotivoSalidaResponse
 
 @Serializable
 data class AttendanceUltimoRegistroResponse(
-    val isSalida: Boolean,
+    var isSalida: Boolean,
     val motivo: List<MotivoSalidaResponse>
 )

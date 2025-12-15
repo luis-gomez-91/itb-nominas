@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +30,8 @@ fun MyFilledTonalButton(
     iconSize: Dp = 24.dp,
     textStyle: TextStyle = MaterialTheme.typography.labelMedium,
     modifier: Modifier = Modifier,
-    shape: CornerBasedShape = MaterialTheme.shapes.small
+    shape: CornerBasedShape = MaterialTheme.shapes.small,
+    isLoading: Boolean = false
 ) {
     FilledTonalButton(
         onClick = {
@@ -44,7 +46,14 @@ fun MyFilledTonalButton(
         modifier = modifier,
         shape = shape
     ) {
-        if (icon != null) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(iconSize),
+                strokeWidth = 2.dp,
+                color = if (enabled) textColor else MaterialTheme.colorScheme.outline
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+        } else if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = text,
