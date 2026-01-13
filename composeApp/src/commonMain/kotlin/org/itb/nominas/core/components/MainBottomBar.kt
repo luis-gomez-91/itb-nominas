@@ -50,6 +50,7 @@ import compose.icons.tablericons.CalendarEvent
 import compose.icons.tablericons.Login
 import compose.icons.tablericons.Logout
 import compose.icons.tablericons.Qrcode
+import io.github.aakira.napier.Napier
 import org.itb.nominas.core.domain.BottomBarItem
 import org.itb.nominas.core.navigation.HomeRoute
 import org.itb.nominas.core.utils.MainViewModel
@@ -109,7 +110,7 @@ fun MainBottomBar(
             isSelected = false
         )
     ).let { baseList ->
-        if (!showEntryButton) {
+        if (showEntryButton) {
             baseList + BottomBarItem(
                 onclick = {
                     mainViewModel.setShowBottomSheetNewEntry(true)
