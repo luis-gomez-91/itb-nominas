@@ -34,6 +34,7 @@ import androidx.navigation.NavHostController
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Scan
 import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import dev.icerock.moko.permissions.location.LOCATION
 import io.github.aakira.napier.Napier
 import org.itb.nominas.core.components.MainScaffold
@@ -179,10 +180,12 @@ fun BottomSheetScanner(
     onDismiss: () -> Unit
 ) {
     var hasPermission by remember { mutableStateOf(false) }
+    val permissionsController = rememberPermissionsControllerFactory()
+        .createPermissionsController()
 
     PermissionRequestEffect(
         permission = Permission.LOCATION,
-        permissionsController = trackerViewModel.mainViewModel.permissionsController
+        permissionsController = permissionsController // <-- Usar el local
     ) { granted ->
         hasPermission = granted
         if (granted) {
@@ -232,10 +235,10 @@ fun BottomSheetScanner(
                         onDismiss()
                     },
                     onFailure = { error ->
+                        Napier.e("Error escaneando QR: $error", tag = "Bitacora")
                     }
                 )
             }
         }
-
     }
 }

@@ -45,6 +45,7 @@ import compose.icons.tablericons.World
 import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
 import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import dev.icerock.moko.permissions.location.LOCATION
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
@@ -61,6 +62,7 @@ import org.itb.nominas.core.platform.SettingsOpener
 import org.itb.nominas.core.platform.isLocationEnabled
 import org.itb.nominas.core.utils.MainViewModel
 import org.itb.nominas.core.utils.URL_SERVER_ONLY
+import org.itb.nominas.core.utils.toCoordinateString
 import org.itb.nominas.features.attendance.data.request.AttendanceEntryRequest
 import org.itb.nominas.features.attendance.data.response.AttendanceResponse
 import org.koin.compose.koinInject
@@ -168,7 +170,15 @@ fun NewEntry(
     var hasPermission by remember { mutableStateOf(false) }
     var isLocationEnabled by remember { mutableStateOf(isLocationEnabled()) }
     var contenido by remember { mutableStateOf("") }
+
+    // Obtener PermissionsController con fallback
+    val composePermissionsController = rememberPermissionsControllerFactory()
+        .createPermissionsController()
+
+    // Usar el del MainViewModel si existe (Android), si no usar el de Compose (iOS)
     val permissionsController = mainViewModel.permissionsController
+        ?: composePermissionsController
+
     val attendanceLoading by mainViewModel.attendanceLoading.collectAsState(false)
     val currentLocation by mainViewModel.location.collectAsState()
     val locationFetchFailed by mainViewModel.locationFetchFailed.collectAsState()
@@ -191,22 +201,25 @@ fun NewEntry(
             if (!granted) {
                 permissionsController.providePermission(Permission.LOCATION)
                 hasPermission = true
-                Napier.i("Permiso FINE_LOCATION concedido tras solicitud", tag = "NewEntry")
+                Napier.i("Permiso LOCATION concedido tras solicitud", tag = "NewEntry")
             } else {
                 hasPermission = true
-                Napier.i("Permiso FINE_LOCATION ya estaba concedido", tag = "NewEntry")
+                Napier.i("Permiso LOCATION ya estaba concedido", tag = "NewEntry")
             }
 
             mainViewModel.fetchLocation()
         } catch (e: DeniedAlwaysException) {
             hasPermission = false
             mainViewModel.setError("Permiso denegado permanentemente")
+            Napier.e("Permiso denegado permanentemente", tag = "NewEntry")
         } catch (e: DeniedException) {
             hasPermission = false
             mainViewModel.setError("Permiso denegado")
+            Napier.e("Permiso denegado", tag = "NewEntry")
         } catch (e: Exception) {
             hasPermission = false
-            mainViewModel.setError("Error al solicitar permiso")
+            mainViewModel.setError("Error al solicitar permiso: ${e.message}")
+            Napier.e("Error al solicitar permiso: ${e.message}", tag = "NewEntry")
         }
     }
 
@@ -328,12 +341,14 @@ fun NewEntry(
                             }
                             // Ubicación obtenida exitosamente
                             isLocationEnabled && currentLocation != null && !isLoadingLocation -> {
-                                Text(
-                                    text = "✓ Ubicación precisa obtenida: ${String.format("%.6f", currentLocation!!.latitude)}, ${String.format("%.6f", currentLocation!!.longitude)}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF4CAF50),
-                                    textAlign = TextAlign.Center
-                                )
+                                currentLocation?.let { location ->
+                                    Text(
+                                        text = "✓ Ubicación precisa obtenida: ${location.latitude.toCoordinateString()}, ${location.longitude.toCoordinateString()}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFF4CAF50),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                             // GPS desactivado
                             !isLocationEnabled -> {

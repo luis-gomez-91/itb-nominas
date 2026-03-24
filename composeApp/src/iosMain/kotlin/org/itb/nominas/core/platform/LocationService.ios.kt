@@ -3,6 +3,7 @@ package org.itb.nominas.core.platform
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import org.itb.nominas.core.domain.LocationItem
 import platform.CoreLocation.*
 import platform.Foundation.NSLocale
@@ -14,7 +15,7 @@ import kotlin.coroutines.resume
 class IOSLocationService : LocationService {
 
     override suspend fun fetchLocation(): LocationItem? {
-        return suspendCancellableCoroutine { continuation ->
+        return withTimeoutOrNull(30_000L) { suspendCancellableCoroutine { continuation ->
 
             val manager = CLLocationManager()
             val delegate = LocationDelegate { item ->
@@ -25,7 +26,7 @@ class IOSLocationService : LocationService {
             manager.desiredAccuracy = kCLLocationAccuracyBest
             manager.requestWhenInUseAuthorization()
             manager.startUpdatingLocation()
-        }
+        } }
     }
 
     private class LocationDelegate(

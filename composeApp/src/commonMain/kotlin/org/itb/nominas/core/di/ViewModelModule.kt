@@ -9,10 +9,21 @@ import org.itb.nominas.features.login.ui.LoginViewModel
 import org.itb.nominas.features.payroll.ui.PayRollViewModel
 import org.itb.nominas.features.tracker.ui.TrackerViewModel
 import org.koin.compose.viewmodel.dsl.viewModelOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val viewModelModule = module {
-    single { MainViewModel(get(), get(), get(), get(), get()) }
+//    single { MainViewModel(get(), get(), get(), get(), get()) }
+
+    viewModel {
+        MainViewModel(
+            service = get(),
+            urlOpener = get(),
+            permissionsController = getOrNull(),
+            locationService = get(),
+            sessionManager = get()
+        )
+    }
     viewModelOf(::LoginViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::PayRollViewModel)

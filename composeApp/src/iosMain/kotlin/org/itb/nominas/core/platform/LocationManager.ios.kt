@@ -1,5 +1,7 @@
 package org.itb.nominas.core.platform
 
+import platform.CoreLocation.CLLocationManager
+
 actual fun isLocationEnabled(): Boolean {
-    return true
+    return CLLocationManager.locationServicesEnabled()
 }

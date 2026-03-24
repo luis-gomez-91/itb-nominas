@@ -31,7 +31,7 @@ import org.itb.nominas.features.home.data.ColaboradorResponse
 class MainViewModel(
     val service: MainService,
     val urlOpener: URLOpener,
-    val permissionsController: PermissionsController,
+    val permissionsController: PermissionsController?,
     private val locationService: LocationService,
     private val sessionManager: SessionManager
 ): ViewModel() {

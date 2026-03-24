@@ -13,7 +13,8 @@ import org.koin.dsl.module
 
 actual val nativeModule = module {
     single<URLOpener> { URLOpenerIOS() }
-    single { PermissionsController() }
+//    single { PermissionsController() }
+
 //    single<LocationService> { IOSLocationService() }
     factoryOf(::IOSLocationService) bind LocationService::class
     single<SettingsOpener> { SettingsOpenerIos() }

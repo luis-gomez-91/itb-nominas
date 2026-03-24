@@ -150,6 +150,6 @@ fun provideHttpClient(): HttpClient = HttpClient {
                 Napier.d(message, tag = "KtorLogging")
             }
         }
-        level = LogLevel.HEADERS
+        level = LogLevel.INFO
     }
 }
